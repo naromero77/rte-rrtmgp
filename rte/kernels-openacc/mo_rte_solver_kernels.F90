@@ -109,11 +109,11 @@ contains
       lev_source_dn => lev_source_dec
     end if
 
-    !$acc enter data copyin(d,tau,sfc_src,sfc_emis,lev_source_dec,lev_source_inc,lay_source,radn_dn)
-    !$acc enter data create(tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo,radn_up)
-    !$acc enter data attach(lev_source_up,lev_source_dn)
+    !$omp target enter data map(to:d,tau,sfc_src,sfc_emis,lev_source_dec,lev_source_inc,lay_source,radn_dn)
+    !$omp target enter data map(alloc:tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo,radn_up)
+    !$omp target enter data map(to:lev_source_up,lev_source_dn)
 
-    !$acc parallel loop collapse(2)
+    !$omp target teams distribute parallel do collapse(2)
     do igpt = 1, ngpt
       do icol = 1, ncol
         !
@@ -133,7 +133,7 @@ contains
     ! implementations on Ascent with PGI, we assume due to floating point
     ! differences in the exp() function. These differences are small in the
     ! RFMIP test case (10^-6).
-    !$acc parallel loop collapse(3)
+    !$omp target teams distribute parallel do collapse(3)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -161,7 +161,7 @@ contains
     !
     ! Convert intensity to flux assuming azimuthal isotropy and quadrature weight
     !
-    !$acc parallel loop collapse(3)
+    !$omp target teams distribute parallel do collapse(3)
     do igpt = 1, ngpt
       do ilev = 1, nlay+1
         do icol = 1, ncol
@@ -171,9 +171,10 @@ contains
       end do
     end do
 
-    !$acc exit data copyout(radn_dn,radn_up)
-    !$acc exit data delete(d,tau,sfc_src,sfc_emis,lev_source_dec,lev_source_inc,lay_source,tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo)
-    !$acc exit data detach(lev_source_up,lev_source_dn)
+    !$omp target exit data map(from:radn_dn,radn_up)
+    !$omp target exit data map(release:d,tau,sfc_src,sfc_emis,lev_source_dec)
+    !$omp target exit data map(release:lev_source_inc,lay_source,tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo)
+    !$omp target exit data map(from:lev_source_up,lev_source_dn)
 
   end subroutine lw_solver_noscat
   ! ---------------------------------------------------------------
@@ -210,12 +211,12 @@ contains
     integer :: imu, top_level
     integer :: icol, ilev, igpt
 
-    !$acc enter data copyin(Ds,weights,tau,lay_source,lev_source_inc,lev_source_dec,sfc_emis,sfc_src,flux_dn)
-    !$acc enter data create(flux_up,radn_dn,radn_up,Ds_ncol,flux_top)
+    !$omp target enter data map(to:ds,weights,tau,lay_source,lev_source_inc,lev_source_dec,sfc_emis,sfc_src,flux_dn)
+    !$omp target enter data map(alloc:flux_up,radn_dn,radn_up,ds_ncol,flux_top)
 
     ! ------------------------------------
     ! ------------------------------------
-    !$acc  parallel loop collapse(2)
+    !$omp target teams distribute parallel do collapse(2)
     do igpt = 1, ngpt
       do icol = 1, ncol
         Ds_ncol(icol, igpt) = Ds(1)
@@ -230,7 +231,7 @@ contains
     ! For more than one angle use local arrays
     !
     top_level = MERGE(1, nlay+1, top_at_1)
-    !$acc parallel loop collapse(2)
+    !$omp target teams distribute parallel do collapse(2)
     do igpt = 1,ngpt
       do icol = 1,ncol
         flux_top(icol,igpt) = flux_dn(icol,top_level,igpt)
@@ -239,7 +240,7 @@ contains
     call apply_BC(ncol, nlay, ngpt, top_at_1, flux_top, radn_dn)
 
     do imu = 2, nmus
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           Ds_ncol(icol, igpt) = Ds(imu)
@@ -249,7 +250,7 @@ contains
                             top_at_1, Ds_ncol, weights(imu), tau, &
                             lay_source, lev_source_inc, lev_source_dec, sfc_emis, sfc_src, &
                             radn_up, radn_dn)
-      !$acc  parallel loop collapse(3)
+      !$omp target teams distribute parallel do collapse(3)
       do igpt = 1, ngpt
         do ilev = 1, nlay+1
           do icol = 1, ncol
@@ -261,8 +262,9 @@ contains
 
     end do ! imu loop
 
-    !$acc exit data copyout(flux_up,flux_dn)
-    !$acc exit data delete(Ds,weights,tau,lay_source,lev_source_inc,lev_source_dec,sfc_emis,sfc_src,radn_dn,radn_up,Ds_ncol,flux_top)
+    !$omp target exit data map(from:flux_up,flux_dn)
+    !$omp target exit data map(release:ds,weights,tau,lay_source,lev_source_inc,lev_source_dec)
+    !$omp target exit data map(release:sfc_emis,sfc_src,radn_dn,radn_up,ds_ncol,flux_top)
   end subroutine lw_solver_noscat_GaussQuad
   ! -------------------------------------------------------------------------------------------------
   !
@@ -304,8 +306,8 @@ contains
     real(wp), dimension(ncol       ,ngpt) :: source_sfc
     ! ------------------------------------
     ! ------------------------------------
-    !$acc enter data copyin(tau, ssa, g, lay_source, lev_source_inc, lev_source_dec, sfc_emis, sfc_src, flux_dn)
-    !$acc enter data create(flux_up, Rdif, Tdif, gamma1, gamma2, sfc_albedo, lev_source, source_dn, source_up, source_sfc)
+    !$omp target enter data map(to:tau,ssa,g,lay_source,lev_source_inc,lev_source_dec,sfc_emis,sfc_src,flux_dn)
+    !$omp target enter data map(alloc:flux_up,rdif,tdif,gamma1,gamma2,sfc_albedo,lev_source,source_dn,source_up,source_sfc)
     !
     ! RRTMGP provides source functions at each level using the spectral mapping
     !   of each adjacent layer. Combine these for two-stream calculations
@@ -330,7 +332,7 @@ contains
                         gamma1, gamma2, Rdif, Tdif, tau, &
                         source_dn, source_up, source_sfc)
 
-    !$acc  parallel loop collapse(2)
+    !$omp target teams distribute parallel do collapse(2)
     do igpt = 1, ngpt
       do icol = 1, ncol
         sfc_albedo(icol,igpt) = 1._wp - sfc_emis(icol,igpt)
@@ -344,9 +346,9 @@ contains
                 Rdif, Tdif,                        &
                 source_dn, source_up, source_sfc,  &
                 flux_up, flux_dn)
-    !$acc exit data delete(tau, ssa, g, lay_source, lev_source_inc, lev_source_dec, sfc_emis, sfc_src)
-    !$acc exit data delete(Rdif, Tdif, gamma1, gamma2, sfc_albedo, lev_source, source_dn, source_up, source_sfc)
-    !$acc exit data copyout(flux_up, flux_dn)
+    !$omp target exit data map(release:tau,ssa,g,lay_source,lev_source_inc,lev_source_dec,sfc_emis,sfc_src)
+    !$omp target exit data map(release:rdif,tdif,gamma1,gamma2,sfc_albedo,lev_source,source_dn,source_up,source_sfc)
+    !$omp target exit data map(from:flux_up,flux_dn)
   end subroutine lw_solver_2stream
   ! -------------------------------------------------------------------------------------------------
   !
@@ -369,8 +371,8 @@ contains
     real(wp) :: mu0_inv(ncol)
     ! ------------------------------------
     ! ------------------------------------
-    !$acc enter data copyin(tau, mu0) create(mu0_inv, flux_dir)
-    !$acc parallel loop
+    !$omp target enter data map(to:tau,mu0) map(alloc:mu0_inv,flux_dir)
+    !$omp target teams distribute parallel do
     do icol = 1, ncol
       mu0_inv(icol) = 1._wp/mu0(icol)
     enddo
@@ -384,7 +386,7 @@ contains
       !   radiation just passed through?
       ! layer index = level index - 1
       ! previous level is up (-1)
-      !$acc parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           do ilev = 2, nlay+1
@@ -395,7 +397,7 @@ contains
     else
       ! layer index = level index
       ! previous level is up (+1)
-      !$acc parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           do ilev = nlay, 1, -1
@@ -404,7 +406,7 @@ contains
         end do
       end do
     end if
-    !$acc exit data delete(tau, mu0, mu0_inv) copyout(flux_dir)
+    !$omp target exit data map(release:tau,mu0,mu0_inv) map(from:flux_dir)
   end subroutine sw_solver_noscat
   ! -------------------------------------------------------------------------------------------------
   !
@@ -439,8 +441,8 @@ contains
     !
     ! Cell properties: transmittance and reflectance for direct and diffuse radiation
     !
-    !$acc enter data copyin(tau, ssa, g, mu0, sfc_alb_dir, sfc_alb_dif, flux_dn, flux_dir)
-    !$acc enter data create(Rdif, Tdif, Rdir, Tdir, Tnoscat, source_up, source_dn, source_srf, flux_up)
+    !$omp target enter data map(to:tau,ssa,g,mu0,sfc_alb_dir,sfc_alb_dif,flux_dn,flux_dir)
+    !$omp target enter data map(alloc:rdif,tdif,rdir,tdir,tnoscat,source_up,source_dn,source_srf,flux_up)
     call sw_two_stream(ncol, nlay, ngpt, mu0, &
                         tau , ssa , g   ,      &
                         Rdif, Tdif, Rdir, Tdir, Tnoscat)
@@ -453,7 +455,7 @@ contains
     !
     ! adding computes only diffuse flux; flux_dn is total
     !
-    !$acc  parallel loop collapse(3)
+    !$omp target teams distribute parallel do collapse(3)
     do igpt = 1, ngpt
       do ilay = 1, nlay+1
         do icol = 1, ncol
@@ -461,8 +463,9 @@ contains
         end do
       end do
     end do
-    !$acc exit data copyout(flux_up, flux_dn, flux_dir)
-    !$acc exit data delete (tau, ssa, g, mu0, sfc_alb_dir, sfc_alb_dif, Rdif, Tdif, Rdir, Tdir, Tnoscat, source_up, source_dn, source_srf)
+    !$omp target exit data map(from:flux_up,flux_dn,flux_dir)
+    !$omp target exit data map(release:tau,ssa,g,mu0,sfc_alb_dir,sfc_alb_dif,rdif,tdif)
+    !$omp target exit data map(release:rdir,tdir,tnoscat,source_up,source_dn,source_srf)
 
   end subroutine sw_solver_2stream
 
@@ -480,7 +483,7 @@ contains
   subroutine lw_source_noscat_stencil(ncol, nlay, ngpt, icol, ilay, igpt,                   &
                                       lay_source, lev_source_up, lev_source_dn, tau, trans, &
                                       source_dn, source_up)
-    !$acc routine seq
+    !$omp declare target 
     !
     integer,                               intent(in)   :: ncol, nlay, ngpt
     integer,                               intent(in)   :: icol, ilay, igpt ! Working point coordinates
@@ -533,7 +536,7 @@ contains
     ! --------------------------------
     integer :: icol, ilay, igpt
     ! ---------------------------------------------------------------
-    !$acc  parallel loop collapse(3)
+    !$omp target teams distribute parallel do collapse(3)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -573,7 +576,7 @@ contains
       !
       ! Top of domain is index 1
       !
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           ! Downward propagation
@@ -594,7 +597,7 @@ contains
       !
       ! Top of domain is index nlay+1
       !
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           ! Downward propagation
@@ -641,10 +644,10 @@ contains
     real(wp), parameter :: LW_diff_sec = 1.66  ! 1./cos(diffusivity angle)
     ! ---------------------------------
     ! ---------------------------------
-    !$acc enter data copyin(tau, w0, g)
-    !$acc enter data create(gamma1, gamma2, Rdif, Tdif)
+    !$omp target enter data map(to:tau,w0,g)
+    !$omp target enter data map(alloc:gamma1,gamma2,rdif,tdif)
 
-    !$acc  parallel loop collapse(3)
+    !$omp target teams distribute parallel do collapse(3)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -683,8 +686,8 @@ contains
         end do
       end do
     end do
-    !$acc exit data delete (tau, w0, g)
-    !$acc exit data copyout(gamma1, gamma2, Rdif, Tdif)
+    !$omp target exit data map(release:tau,w0,g)
+    !$omp target exit data map(from:gamma1,gamma2,rdif,tdif)
   end subroutine lw_two_stream
   ! -------------------------------------------------------------------------------------------------
   !
@@ -704,10 +707,10 @@ contains
     integer :: icol, ilay, igpt
     ! ---------------------------------------------------------------
     ! ---------------------------------
-    !$acc enter data copyin(lev_src_inc, lev_src_dec)
-    !$acc enter data create(lev_source)
+    !$omp target enter data map(to:lev_src_inc,lev_src_dec)
+    !$omp target enter data map(alloc:lev_source)
 
-    !$acc  parallel loop collapse(3)
+    !$omp target teams distribute parallel do collapse(3)
     do igpt = 1, ngpt
       do ilay = 1, nlay+1
         do icol = 1,ncol
@@ -722,8 +725,8 @@ contains
         end do
       end do
     end do
-    !$acc exit data delete (lev_src_inc, lev_src_dec)
-    !$acc exit data copyout(lev_source)
+    !$omp target exit data map(release:lev_src_inc,lev_src_dec)
+    !$omp target exit data map(from:lev_source)
   end subroutine lw_combine_sources
   ! ---------------------------------------------------------------
   !
@@ -754,10 +757,10 @@ contains
     real(wp)            :: lev_source_bot, lev_source_top
     ! ---------------------------------------------------------------
     ! ---------------------------------
-    !$acc enter data copyin(sfc_emis, sfc_src, lay_source, tau, gamma1, gamma2, rdif, tdif, lev_source)
-    !$acc enter data create(source_dn, source_up, source_sfc)
+    !$omp target enter data map(to:sfc_emis,sfc_src,lay_source,tau,gamma1,gamma2,rdif,tdif,lev_source)
+    !$omp target enter data map(alloc:source_dn,source_up,source_sfc)
 
-    !$acc parallel loop collapse(3)
+    !$omp target teams distribute parallel do collapse(3)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -787,8 +790,8 @@ contains
         end do
       end do
     end do
-    !$acc exit data delete(sfc_emis, sfc_src, lay_source, tau, gamma1, gamma2, rdif, tdif, lev_source)
-    !$acc exit data copyout(source_dn, source_up, source_sfc)
+    !$omp target exit data map(release:sfc_emis,sfc_src,lay_source,tau,gamma1,gamma2,rdif,tdif,lev_source)
+    !$omp target exit data map(from:source_dn,source_up,source_sfc)
 
   end subroutine lw_source_2str
   ! -------------------------------------------------------------------------------------------------
@@ -824,10 +827,10 @@ contains
       real(wp) :: mu0_inv(ncol)
       ! ---------------------------------
       ! ---------------------------------
-      !$acc enter data copyin (mu0, tau, w0, g)
-      !$acc enter data create(Rdif, Tdif, Rdir, Tdir, Tnoscat, mu0_inv)
+      !$omp target enter data map(to:mu0,tau,w0,g)
+      !$omp target enter data map(alloc:rdif,tdif,rdir,tdir,tnoscat,mu0_inv)
 
-      !$acc parallel loop
+      !$omp target teams distribute parallel do
       do icol = 1, ncol
         mu0_inv(icol) = 1._wp/mu0(icol)
       enddo
@@ -835,7 +838,7 @@ contains
       ! NOTE: this kernel appears to cause small (10^-6) differences between GPU
       ! and CPU. This *might* be floating point differences in implementation of
       ! the exp function.
-      !$acc  parallel loop collapse(3)
+      !$omp target teams distribute parallel do collapse(3)
       do igpt = 1, ngpt
         do ilay = 1, nlay
           do icol = 1, ncol
@@ -912,8 +915,8 @@ contains
           end do
         end do
       end do
-      !$acc exit data delete (mu0, tau, w0, g, mu0_inv)
-      !$acc exit data copyout(Rdif, Tdif, Rdir, Tdir, Tnoscat)
+      !$omp target exit data map(release:mu0,tau,w0,g,mu0_inv)
+      !$omp target exit data map(from:rdif,tdif,rdir,tdir,tnoscat)
 
     end subroutine sw_two_stream
   ! ---------------------------------------------------------------
@@ -935,11 +938,11 @@ contains
     integer :: icol, ilev, igpt
     ! ---------------------------------
     ! ---------------------------------
-    !$acc enter data copyin (Rdir, Tdir, Tnoscat, sfc_albedo, flux_dn_dir)
-    !$acc enter data create(source_dn, source_up, source_sfc)
+    !$omp target enter data map(to:rdir,tdir,tnoscat,sfc_albedo,flux_dn_dir)
+    !$omp target enter data map(alloc:source_dn,source_up,source_sfc)
 
     if(top_at_1) then
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           do ilev = 1, nlay
@@ -953,7 +956,7 @@ contains
     else
       ! layer index = level index
       ! previous level is up (+1)
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           do ilev = nlay, 1, -1
@@ -965,8 +968,8 @@ contains
         end do
       end do
     end if
-    !$acc exit data copyout(source_dn, source_up, source_sfc, flux_dn_dir)
-    !$acc exit data delete(Rdir, Tdir, Tnoscat, sfc_albedo)
+    !$omp target exit data map(from:source_dn,source_up,source_sfc,flux_dn_dir)
+    !$omp target exit data map(release:rdir,tdir,tnoscat,sfc_albedo)
 
   end subroutine sw_source_2str
 ! ---------------------------------------------------------------
@@ -1010,11 +1013,11 @@ contains
     !   orientation of the arrays (whether the domain top is at the first or last index)
     ! We write the loops out explicitly so compilers will have no trouble optimizing them.
     !
-    !$acc enter data copyin(albedo_sfc, rdif, tdif, src_dn, src_up, src_sfc, flux_dn)
-    !$acc enter data create(flux_up, albedo, src, denom)
+    !$omp target enter data map(to:albedo_sfc,rdif,tdif,src_dn,src_up,src_sfc,flux_dn)
+    !$omp target enter data map(alloc:flux_up,albedo,src,denom)
 
     if(top_at_1) then
-      !$acc parallel loop gang vector collapse(2)
+      !$omp target teams distribute parallel do  simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           ilev = nlay + 1
@@ -1061,7 +1064,7 @@ contains
       
     else
 
-      !$acc parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           ilev = 1
@@ -1107,8 +1110,8 @@ contains
         end do
       end do
     end if
-    !$acc exit data delete(albedo_sfc, rdif, tdif, src_dn, src_up, src_sfc, albedo, src, denom)
-    !$acc exit data copyout(flux_up, flux_dn)
+    !$omp target exit data map(release:albedo_sfc,rdif,tdif,src_dn,src_up,src_sfc,albedo,src,denom)
+    !$omp target exit data map(from:flux_up,flux_dn)
   end subroutine adding
   ! ---------------------------------------------------------------
   !
@@ -1126,14 +1129,14 @@ contains
     ! --------------
     !   Upper boundary condition
     if(top_at_1) then
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol,      1, igpt)  = inc_flux(icol,igpt)
         end do
       end do
     else
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol, nlay+1, igpt)  = inc_flux(icol,igpt)
@@ -1155,14 +1158,14 @@ contains
 
     !   Upper boundary condition
     if(top_at_1) then
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol,      1, igpt)  = inc_flux(icol,igpt) * factor(icol)
         end do
       end do
     else
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol, nlay+1, igpt)  = inc_flux(icol,igpt) * factor(icol)
@@ -1182,14 +1185,14 @@ contains
 
     !   Upper boundary condition
     if(top_at_1) then
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol,      1, igpt)  = 0._wp
         end do
       end do
     else
-      !$acc  parallel loop collapse(2)
+      !$omp target teams distribute parallel do collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol, nlay+1, igpt)  = 0._wp

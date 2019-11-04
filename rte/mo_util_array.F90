@@ -35,42 +35,45 @@ contains
   ! Values less than a floor
   !-------------------------------------------------------------------------------------------------
   logical function any_vals_less_than_1D(array, check_value)
+    !$omp declare target
     real(wp), dimension(:), intent(in) :: array
     real(wp),               intent(in) :: check_value
 
     real(wp) :: minValue
 
-    !$acc kernels copyin(array)
+    !!! !$omp target teams distribute map(to:array)
     minValue = minval(array)
-    !$acc end kernels
+    !!! !$omp end target teams distribute
 
     any_vals_less_than_1D = (minValue < check_value)
 
   end function any_vals_less_than_1D
 !-------------------------------------------------------------------------------------------------
   logical function any_vals_less_than_2D(array, check_value)
+    !$omp declare target
     real(wp), dimension(:,:), intent(in) :: array
     real(wp),                 intent(in) :: check_value
 
     real(wp) :: minValue
 
-    !$acc kernels copyin(array)
+    !!! !$omp target teams distribute map(to:array)
     minValue = minval(array)
-    !$acc end kernels
+    !!! !$omp end target teams distribute
 
     any_vals_less_than_2D = (minValue < check_value)
 
   end function any_vals_less_than_2D
 !-------------------------------------------------------------------------------------------------
   logical function any_vals_less_than_3D(array, check_value)
+    !$omp declare target
     real(wp), dimension(:,:,:), intent(in) :: array
     real(wp),                   intent(in) :: check_value
 
     real(wp) :: minValue
 
-    !$acc kernels copyin(array)
+    !!! !$omp target teams distribute map(to:array)
     minValue = minval(array)
-    !$acc end kernels
+    !!! !$omp end target teams distribute
 
     any_vals_less_than_3D = (minValue < check_value)
 
@@ -79,43 +82,46 @@ contains
   ! Values outside a range
   !-------------------------------------------------------------------------------------------------
   logical function any_vals_outside_1D(array, checkMin, checkMax)
+    !$omp declare target
     real(wp), dimension(:), intent(in) :: array
     real(wp),               intent(in) :: checkMin, checkMax
 
     real(wp) :: minValue, maxValue
 
-    !$acc kernels copyin(array)
+    !!! !$omp target teams distribute map(to:array)
     minValue = minval(array)
     maxValue = maxval(array)
-    !$acc end kernels
+    !!! !$omp end target teams distribute
     any_vals_outside_1D = minValue < checkMin .or. maxValue > checkMax
 
   end function any_vals_outside_1D
 ! ----------------------------------------------------------
   logical function any_vals_outside_2D(array, checkMin, checkMax)
+    !$omp declare target 
     real(wp), dimension(:,:), intent(in) :: array
     real(wp),                 intent(in) :: checkMin, checkMax
 
     real(wp) :: minValue, maxValue
 
-    !$acc kernels copyin(array)
+    !!! !$omp target teams distribute map(to:array)
     minValue = minval(array)
     maxValue = maxval(array)
-    !$acc end kernels
+    !!! !$omp end target teams distribute
     any_vals_outside_2D = minValue < checkMin .or. maxValue > checkMax
 
   end function any_vals_outside_2D
 ! ----------------------------------------------------------
   logical function any_vals_outside_3D(array, checkMin, checkMax)
+    !$omp declare target 
     real(wp), dimension(:,:,:), intent(in) :: array
     real(wp),                   intent(in) :: checkMin, checkMax
 
     real(wp) :: minValue, maxValue
 
-    !$acc kernels copyin(array)
+    !!!! !$omp target teams distribute map(to:array)
     minValue = minval(array)
     maxValue = maxval(array)
-    !$acc end kernels
+    !!!! !$omp end target teams distribute
     any_vals_outside_3D = minValue < checkMin .or. maxValue > checkMax
 
   end function any_vals_outside_3D
@@ -123,32 +129,35 @@ contains
   ! Initializing arrays to 0
   !-------------------------------------------------------------------------------------------------
   subroutine zero_array_1D(ni, array) bind(C, name="zero_array_1D")
+    !$omp declare target 
     integer,                 intent(in ) :: ni
     real(wp), dimension(ni), intent(out) :: array
     ! -----------------------
-    !$acc kernels
+    !!!! !$omp target teams distribute
     array = 0.0_wp
-    !$acc end kernels
+    !!!! !$omp end target teams distribute
 
   end subroutine zero_array_1D
   ! ----------------------------------------------------------
   subroutine zero_array_3D(ni, nj, nk, array) bind(C, name="zero_array_3D")
+    !$omp declare target
     integer,                         intent(in ) :: ni, nj, nk
     real(wp), dimension(ni, nj, nk), intent(out) :: array
     ! -----------------------
-    !$acc kernels
+    !!! !$omp target teams distribute
     array = 0.0_wp
-    !$acc end kernels
+    !!! !$omp end target teams distribute
 
   end subroutine zero_array_3D
   ! ----------------------------------------------------------
   subroutine zero_array_4D(ni, nj, nk, nl, array) bind(C, name="zero_array_4D")
+    !$omp declare target
     integer,                             intent(in ) :: ni, nj, nk, nl
     real(wp), dimension(ni, nj, nk, nl), intent(out) :: array
     ! -----------------------
-    !$acc kernels
+    !!! !$omp target teams distribute
     array = 0.0_wp
-    !$acc end kernels
+    !!!! !$omp end target teams distribute
 
   end subroutine zero_array_4D
 ! ----------------------------------------------------------
