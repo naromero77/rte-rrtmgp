@@ -757,15 +757,14 @@ contains
     real(wp) :: t
     integer, parameter :: tile = 32
     ! -----------------------
-    !$acc data copy(tau, ssa, g)                 &
-    !$omp map(to:tau_rayleigh, tau_abs)
 
     ! We are using blocking memory accesses here to improve performance
     !  of the transpositions. See also comments in mo_reorder_kernels.F90
     !
     !$acc parallel default(none) vector_length(tile*tile)
-    !$omp parallel do  collapse(3)
-      do ilay = 1, nlay
+    !$omp target teams distribute parallel do simd collapse(3) &
+    !$omp& map(tofrom:tau, ssa, g) map(to:tau_rayleigh, tau_abs)
+    do ilay = 1, nlay
       do icol0 = 1, ncol, tile
         do igpt0 = 1, ngpt, tile
 
@@ -791,8 +790,7 @@ contains
         end do
       end do
     end do
-    !$omp end target teams distribute
-    !$omp end data
+
   end subroutine combine_and_reorder_2str
   ! ----------------------------------------------------------
   !
@@ -810,8 +808,8 @@ contains
     integer :: icol, ilay, igpt, imom
     real(wp) :: t
     ! -----------------------
-    !$acc parallel loop collapse(3) &
-    !$acc&     copy(tau, ssa, p) &
+    !$omp target teams distribute parallel do simd collapse(3) &
+    !$omp& map(tofrom:tau, ssa, p) &
     !$omp& map(to:tau_rayleigh(:ngpt, :nlay, :ncol), tau_abs(:ngpt, :nlay, :ncol))
     do icol = 1, ncol
       do ilay = 1, nlay
