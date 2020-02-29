@@ -1548,7 +1548,7 @@ contains
     ncol = size(tau, 3)
     nlay = size(tau, 2)
     ngpt = size(tau, 1)
-    !$omp target enter data map(to:optical_props)
+
     if (.not. has_rayleigh) then
       ! index reorder (ngpt, nlay, ncol) -> (ncol,nlay,gpt)
       !$omp target enter data map(to:tau)
@@ -1592,7 +1592,7 @@ contains
       end select
       !$omp target exit data map(release:tau,tau_rayleigh)
     end if
-    !$omp target exit data map(from:optical_props)
+
   end subroutine combine_and_reorder
 
   !--------------------------------------------------------------------------------------------------------------------
