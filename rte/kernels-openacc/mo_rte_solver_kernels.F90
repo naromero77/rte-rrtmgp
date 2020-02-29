@@ -70,7 +70,7 @@ contains
     ! Planck source at layer edge for radiation in increasing/decreasing ilay direction
     ! lev_source_dec applies the mapping in layer i to the Planck function at layer i
     ! lev_source_inc applies the mapping in layer i to the Planck function at layer i+1
-    real(wp), dimension(ncol,nlay,  ngpt), target, &
+    real(wp), dimension(ncol,nlay,  ngpt), &
                                            intent( in) :: lev_source_inc, lev_source_dec
     real(wp), dimension(ncol,       ngpt), intent( in) :: sfc_emis         ! Surface emissivity      []
     real(wp), dimension(ncol,       ngpt), intent( in) :: sfc_src          ! Surface source function [W/m2]
@@ -84,8 +84,6 @@ contains
     real(wp), dimension(ncol,nlay,ngpt) :: source_dn, source_up
     real(wp), dimension(ncol,     ngpt) :: source_sfc, sfc_albedo
 
-    real(wp), dimension(:,:,:), pointer :: lev_source_up, lev_source_dn ! Mapping increasing/decreasing indicies to up/down
-
     real(wp), parameter :: pi = acos(-1._wp)
     integer             :: icol, ilev, igpt, top_level, ilay
 
@@ -97,23 +95,19 @@ contains
     ! ------------------------------------
     ! Which way is up?
     ! Level Planck sources for upward and downward radiation
-    ! When top_at_1, lev_source_up => lev_source_dec
-    !                lev_source_dn => lev_source_inc, and vice-versa
     if(top_at_1) then
       top_level = 1
-      lev_source_up => lev_source_dec
-      lev_source_dn => lev_source_inc
     else
       top_level = nlay+1
-      lev_source_up => lev_source_inc
-      lev_source_dn => lev_source_dec
     end if
 
-    !$omp target enter data map(to:d,tau,sfc_src,sfc_emis,lev_source_dec,lev_source_inc,lay_source,radn_dn)
-    !$omp target enter data map(alloc:tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo,radn_up)
-    !$omp target enter data map(to:lev_source_up,lev_source_dn)
+    !$omp target data &
+    !$omp& map(to:d,lay_source,lev_source_dec,lev_source_inc,sfc_emis,sfc_src,tau) &
+    !$omp& map(alloc:sfc_albedo,source_dn,source_sfc,source_up,tau_loc,trans) &
+    !$omp& map(tofrom:radn_dn) &
+    !$omp& map(from:radn_up) 
 
-    !$omp target teams distribute parallel do collapse(2)
+    !$omp target teams distribute parallel do simd collapse(2)
     do igpt = 1, ngpt
       do icol = 1, ncol
         !
@@ -133,23 +127,48 @@ contains
     ! implementations on Ascent with PGI, we assume due to floating point
     ! differences in the exp() function. These differences are small in the
     ! RFMIP test case (10^-6).
-    !$omp target teams distribute parallel do collapse(3)
-    do igpt = 1, ngpt
-      do ilay = 1, nlay
-        do icol = 1, ncol
-          !
-          ! Optical path and transmission, used in source function and transport calculations
-          !
-          tau_loc(icol,ilay,igpt) = tau(icol,ilay,igpt)*D(icol,igpt)
-          trans  (icol,ilay,igpt) = exp(-tau_loc(icol,ilay,igpt))
 
-          call lw_source_noscat_stencil(ncol, nlay, ngpt, icol, ilay, igpt,        &
-                                        lay_source, lev_source_up, lev_source_dn,  &
-                                        tau_loc, trans,                            &
-                                        source_dn, source_up)
+    if (top_at_1) then
+
+      !$omp target teams distribute parallel do simd collapse(3)
+      do igpt = 1, ngpt
+        do ilay = 1, nlay
+          do icol = 1, ncol
+            !
+            ! Optical path and transmission, used in source function and transport calculations
+            !
+            tau_loc(icol,ilay,igpt) = tau(icol,ilay,igpt)*D(icol,igpt)
+            trans  (icol,ilay,igpt) = exp(-tau_loc(icol,ilay,igpt))
+
+            call lw_source_noscat_stencil(ncol, nlay, ngpt, icol, ilay, igpt,        &
+              lay_source, lev_source_dec, lev_source_inc,  &
+              tau_loc, trans,                            &
+              source_dn, source_up)
+          end do
         end do
       end do
-    end do
+
+    else
+
+      !$omp target teams distribute parallel do simd collapse(3)
+      do igpt = 1, ngpt
+        do ilay = 1, nlay
+          do icol = 1, ncol
+            !
+            ! Optical path and transmission, used in source function and transport calculations
+            !
+            tau_loc(icol,ilay,igpt) = tau(icol,ilay,igpt)*D(icol,igpt)
+            trans  (icol,ilay,igpt) = exp(-tau_loc(icol,ilay,igpt))
+
+            call lw_source_noscat_stencil(ncol, nlay, ngpt, icol, ilay, igpt,        &
+              lay_source, lev_source_inc, lev_source_dec,  &
+              tau_loc, trans,                            &
+              source_dn, source_up)
+          end do
+        end do
+      end do
+
+    end if
 
     !
     ! Transport
@@ -161,7 +180,7 @@ contains
     !
     ! Convert intensity to flux assuming azimuthal isotropy and quadrature weight
     !
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3)
     do igpt = 1, ngpt
       do ilev = 1, nlay+1
         do icol = 1, ncol
@@ -171,10 +190,7 @@ contains
       end do
     end do
 
-    !$omp target exit data map(from:radn_dn,radn_up)
-    !$omp target exit data map(release:d,tau,sfc_src,sfc_emis,lev_source_dec)
-    !$omp target exit data map(release:lev_source_inc,lay_source,tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo)
-    !$omp target exit data map(from:lev_source_up,lev_source_dn)
+    !$omp end target data
 
   end subroutine lw_solver_noscat
   ! ---------------------------------------------------------------
@@ -216,7 +232,7 @@ contains
 
     ! ------------------------------------
     ! ------------------------------------
-    !$omp target teams distribute parallel do collapse(2)
+    !$omp target teams distribute parallel do simd collapse(2)
     do igpt = 1, ngpt
       do icol = 1, ncol
         Ds_ncol(icol, igpt) = Ds(1)
@@ -231,7 +247,7 @@ contains
     ! For more than one angle use local arrays
     !
     top_level = MERGE(1, nlay+1, top_at_1)
-    !$omp target teams distribute parallel do collapse(2)
+    !$omp target teams distribute parallel do simd collapse(2)
     do igpt = 1,ngpt
       do icol = 1,ncol
         flux_top(icol,igpt) = flux_dn(icol,top_level,igpt)
@@ -240,17 +256,18 @@ contains
     call apply_BC(ncol, nlay, ngpt, top_at_1, flux_top, radn_dn)
 
     do imu = 2, nmus
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           Ds_ncol(icol, igpt) = Ds(imu)
         end do
       end do
+      !dir$ noinline
       call lw_solver_noscat(ncol, nlay, ngpt, &
                             top_at_1, Ds_ncol, weights(imu), tau, &
                             lay_source, lev_source_inc, lev_source_dec, sfc_emis, sfc_src, &
                             radn_up, radn_dn)
-      !$omp target teams distribute parallel do collapse(3)
+      !$omp target teams distribute parallel do simd collapse(3)
       do igpt = 1, ngpt
         do ilev = 1, nlay+1
           do icol = 1, ncol
@@ -265,6 +282,7 @@ contains
     !$omp target exit data map(from:flux_up,flux_dn)
     !$omp target exit data map(release:ds,weights,tau,lay_source,lev_source_inc,lev_source_dec)
     !$omp target exit data map(release:sfc_emis,sfc_src,radn_dn,radn_up,ds_ncol,flux_top)
+
   end subroutine lw_solver_noscat_GaussQuad
   ! -------------------------------------------------------------------------------------------------
   !
@@ -285,7 +303,7 @@ contains
                                                             ssa, &  ! single-scattering albedo,
                                                             g       ! asymmetry parameter []
     real(wp), dimension(ncol,nlay,ngpt), intent(in   ) :: lay_source   ! Planck source at layer average temperature [W/m2]
-    real(wp), dimension(ncol,nlay,ngpt), target, &
+    real(wp), dimension(ncol,nlay,ngpt), &
                                            intent(in   ) :: lev_source_inc, lev_source_dec
                                         ! Planck source at layer edge for radiation in increasing/decreasing ilay direction [W/m2]
                                         ! Includes spectral weighting that accounts for state-dependent frequency to g-space mapping
@@ -332,7 +350,7 @@ contains
                         gamma1, gamma2, Rdif, Tdif, tau, &
                         source_dn, source_up, source_sfc)
 
-    !$omp target teams distribute parallel do collapse(2)
+    !$omp target teams distribute parallel do simd collapse(2)
     do igpt = 1, ngpt
       do icol = 1, ncol
         sfc_albedo(icol,igpt) = 1._wp - sfc_emis(icol,igpt)
@@ -372,7 +390,7 @@ contains
     ! ------------------------------------
     ! ------------------------------------
     !$omp target enter data map(to:tau,mu0) map(alloc:mu0_inv,flux_dir)
-    !$omp target teams distribute parallel do
+    !$omp target teams distribute parallel do simd
     do icol = 1, ncol
       mu0_inv(icol) = 1._wp/mu0(icol)
     enddo
@@ -386,7 +404,7 @@ contains
       !   radiation just passed through?
       ! layer index = level index - 1
       ! previous level is up (-1)
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           do ilev = 2, nlay+1
@@ -397,7 +415,7 @@ contains
     else
       ! layer index = level index
       ! previous level is up (+1)
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           do ilev = nlay, 1, -1
@@ -455,7 +473,7 @@ contains
     !
     ! adding computes only diffuse flux; flux_dn is total
     !
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3)
     do igpt = 1, ngpt
       do ilay = 1, nlay+1
         do icol = 1, ncol
@@ -536,7 +554,7 @@ contains
     ! --------------------------------
     integer :: icol, ilay, igpt
     ! ---------------------------------------------------------------
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -576,7 +594,7 @@ contains
       !
       ! Top of domain is index 1
       !
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           ! Downward propagation
@@ -597,7 +615,7 @@ contains
       !
       ! Top of domain is index nlay+1
       !
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           ! Downward propagation
@@ -647,7 +665,8 @@ contains
     !$omp target enter data map(to:tau,w0,g)
     !$omp target enter data map(alloc:gamma1,gamma2,rdif,tdif)
 
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3) &
+    !$omp& private(exp_minusktau,exp_minus2ktau,k,rt_term)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -710,7 +729,7 @@ contains
     !$omp target enter data map(to:lev_src_inc,lev_src_dec)
     !$omp target enter data map(alloc:lev_source)
 
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3)
     do igpt = 1, ngpt
       do ilay = 1, nlay+1
         do icol = 1,ncol
@@ -747,7 +766,7 @@ contains
                                                    tau,           & ! Optical depth (tau)
                                                    gamma1, gamma2,& ! Coupling coefficients
                                                    rdif, tdif       ! Layer reflectance and transmittance
-    real(wp), dimension(ncol, nlay+1, ngpt), target, &
+    real(wp), dimension(ncol, nlay+1, ngpt), &
                                      intent(in)  :: lev_source       ! Planck source at layer edges
     real(wp), dimension(ncol, nlay, ngpt), intent(out) :: source_dn, source_up
     real(wp), dimension(ncol      , ngpt), intent(out) :: source_sfc      ! Source function for upward radation at surface
@@ -760,7 +779,8 @@ contains
     !$omp target enter data map(to:sfc_emis,sfc_src,lay_source,tau,gamma1,gamma2,rdif,tdif,lev_source)
     !$omp target enter data map(alloc:source_dn,source_up,source_sfc)
 
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3) &
+    !$omp& private(lev_source_bot,lev_source_top,z,zdn_bottom,zdn_top,zup_bottom,zup_top)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -830,7 +850,7 @@ contains
       !$omp target enter data map(to:mu0,tau,w0,g)
       !$omp target enter data map(alloc:rdif,tdif,rdir,tdir,tnoscat,mu0_inv)
 
-      !$omp target teams distribute parallel do
+      !$omp target teams distribute parallel do simd
       do icol = 1, ncol
         mu0_inv(icol) = 1._wp/mu0(icol)
       enddo
@@ -838,7 +858,8 @@ contains
       ! NOTE: this kernel appears to cause small (10^-6) differences between GPU
       ! and CPU. This *might* be floating point differences in implementation of
       ! the exp function.
-      !$omp target teams distribute parallel do collapse(3)
+      !$omp target teams distribute parallel do simd collapse(3) &
+      !$omp& private(alpha1,alpha2,gamma1,gamma2,gamma3,gamma4,exp_minusktau,exp_minus2ktau,k,k_gamma3,k_gamma4,k_mu,rt_term)
       do igpt = 1, ngpt
         do ilay = 1, nlay
           do icol = 1, ncol
@@ -942,7 +963,7 @@ contains
     !$omp target enter data map(alloc:source_dn,source_up,source_sfc)
 
     if(top_at_1) then
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           do ilev = 1, nlay
@@ -956,7 +977,7 @@ contains
     else
       ! layer index = level index
       ! previous level is up (+1)
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           do ilev = nlay, 1, -1
@@ -1017,7 +1038,7 @@ contains
     !$omp target enter data map(alloc:flux_up,albedo,src,denom)
 
     if(top_at_1) then
-      !$omp target teams distribute parallel do  simd collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           ilev = nlay + 1
@@ -1064,7 +1085,7 @@ contains
       
     else
 
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           ilev = 1
@@ -1129,14 +1150,14 @@ contains
     ! --------------
     !   Upper boundary condition
     if(top_at_1) then
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol,      1, igpt)  = inc_flux(icol,igpt)
         end do
       end do
     else
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol, nlay+1, igpt)  = inc_flux(icol,igpt)
@@ -1158,14 +1179,14 @@ contains
 
     !   Upper boundary condition
     if(top_at_1) then
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol,      1, igpt)  = inc_flux(icol,igpt) * factor(icol)
         end do
       end do
     else
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol, nlay+1, igpt)  = inc_flux(icol,igpt) * factor(icol)
@@ -1185,14 +1206,14 @@ contains
 
     !   Upper boundary condition
     if(top_at_1) then
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol,      1, igpt)  = 0._wp
         end do
       end do
     else
-      !$omp target teams distribute parallel do collapse(2)
+      !$omp target teams distribute parallel do simd collapse(2)
       do igpt = 1, ngpt
         do icol = 1, ncol
           flux_dn(icol, nlay+1, igpt)  = 0._wp
