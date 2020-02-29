@@ -219,7 +219,7 @@ contains
     ! ---------------------
     top_at_1 = play(1,1) < play(1, nlay)
     if(top_at_1) then
-      !$omp target teams distribute parallel do
+      !$omp target teams distribute parallel do simd
       do icol = 1,ncol
         itropo_lower(icol,2) = nlay
         itropo_lower(icol,1) = minloc(play(icol,:), dim=1, mask=tropo(icol,:))
@@ -227,7 +227,7 @@ contains
         itropo_upper(icol,2) = maxloc(play(icol,:), dim=1, mask=(.not. tropo(icol,:)))
       end do
     else
-      !$omp target teams distribute parallel do
+      !$omp target teams distribute parallel do simd
       do icol = 1,ncol
         itropo_lower(icol,1) = 1
         itropo_lower(icol,2) = minloc(play(icol,:), dim=1, mask=tropo(icol,:))
