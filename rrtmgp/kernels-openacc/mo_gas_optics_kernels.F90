@@ -777,14 +777,14 @@ contains
               igpt = igpt0 + igdiff
               if (icol > ncol .or. igpt > ngpt) cycle
 
-           t = tau_abs(igpt,ilay,icol) + tau_rayleigh(igpt,ilay,icol)
-           tau(icol,ilay,igpt) = t
-           g  (icol,ilay,igpt) = 0._wp
-           if(t > 2._wp * tiny(t)) then
-             ssa(icol,ilay,igpt) = tau_rayleigh(igpt,ilay,icol) / t
-           else
-             ssa(icol,ilay,igpt) = 0._wp
-           end if
+              t = tau_abs(igpt,ilay,icol) + tau_rayleigh(igpt,ilay,icol)
+              tau(icol,ilay,igpt) = t
+              g  (icol,ilay,igpt) = 0._wp
+              if(t > 2._wp * tiny(t)) then
+                ssa(icol,ilay,igpt) = tau_rayleigh(igpt,ilay,icol) / t
+              else
+                ssa(icol,ilay,igpt) = 0._wp
+              end if
 
             end do
           end do
