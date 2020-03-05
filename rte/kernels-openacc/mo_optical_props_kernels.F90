@@ -62,7 +62,8 @@ contains
     !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:ssa(:ncol,:nlay,:ngpt),tau(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:f(:ncol,:nlay,:ngpt)) &
-    !$omp& map(tofrom:g(:ncol,:nlay,:ngpt))
+    !$omp& map(tofrom:g(:ncol,:nlay,:ngpt)) &
+    !$omp& private(wf)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -91,7 +92,8 @@ contains
     ! --------------
 
     !$omp target teams distribute parallel do simd collapse(3) &
-    !$omp& map(tofrom:tau(:ncol,:nlay,:ngpt),ssa(:ncol,:nlay,:ngpt),g(:ncol,:nlay,:ngpt))
+    !$omp& map(tofrom:tau(:ncol,:nlay,:ngpt),ssa(:ncol,:nlay,:ngpt),g(:ncol,:nlay,:ngpt)) &
+    !$omp& private(f, wf)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -215,7 +217,8 @@ contains
     !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:ngpt)) &
-    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt))
+    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
+    !$omp& private(tau12)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -247,7 +250,8 @@ contains
     !$omp& map(to:g2(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:ngpt),tau2(:ncol,:nlay,:ngpt)) &
-    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt),g1(:ncol,:nlay,:ngpt))
+    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt),g1(:ncol,:nlay,:ngpt)) &
+    !$omp& private(tau12, tauscat12)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -288,7 +292,8 @@ contains
     !$omp& map(to:p2(:1,:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:ngpt),tau2(:ncol,:nlay,:ngpt)) &
-    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt),g1(:ncol,:nlay,:ngpt))
+    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt),g1(:ncol,:nlay,:ngpt)) &
+    !$omp& private(tau12, tauscat12)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -327,7 +332,8 @@ contains
     !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:ngpt)) &
-    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt))
+    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
+    !$omp& private(tau12)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -365,7 +371,8 @@ contains
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:g2(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:temp_moms(:nmom1)) &
-    !$omp& map(to:tau2(:ncol,:nlay,:ngpt))
+    !$omp& map(to:tau2(:ncol,:nlay,:ngpt)) &
+    !$omp& private(tau12, tauscat12)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -414,7 +421,8 @@ contains
     !$omp& map(to:p2(:mom_lim,:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:ngpt),tau2(:ncol,:nlay,:ngpt)) &
-    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt),p1(:mom_lim,:ncol,:nlay,:ngpt))
+    !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt),p1(:mom_lim,:ncol,:nlay,:ngpt)) &
+    !$omp& private(tau12, tauscat12)
     do igpt = 1, ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -544,7 +552,8 @@ contains
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
-    !$omp& map(to:gpt_lims(:,:nbnd))
+    !$omp& map(to:gpt_lims(:,:nbnd)) &
+    !$omp& private(tau12)
     do igpt = 1 , ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -579,7 +588,8 @@ contains
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:gpt_lims(:,:nbnd)) &
     !$omp& map(tofrom:g1(:ncol,:nlay,:ngpt)) &
-    !$omp& map(to:g2(:ncol,:nlay,:nbnd))
+    !$omp& map(to:g2(:ncol,:nlay,:nbnd)) &
+    !$omp& private(tau12, tauscat12)
     do igpt = 1 , ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -623,7 +633,8 @@ contains
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd),ssa2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:p2(:1,:ncol,:nlay,:nbnd),gpt_lims(:,:nbnd)) &
-    !$omp& map(tofrom:g1(:ncol,:nlay,:ngpt))
+    !$omp& map(tofrom:g1(:ncol,:nlay,:ngpt)) &
+    !$omp& private(tau12, tauscat12) 
     do igpt = 1 , ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -665,7 +676,8 @@ contains
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
-    !$omp& map(to:gpt_lims(:,:nbnd))
+    !$omp& map(to:gpt_lims(:,:nbnd)) &
+    !$omp& private(tau12)
     do igpt = 1 , ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -705,7 +717,8 @@ contains
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt),p1(:nmom1,:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:temp_moms(:nmom1)) &
-    !$omp& map(to:gpt_lims(:,:nbnd),g2(:ncol,:nlay,:nbnd))
+    !$omp& map(to:gpt_lims(:,:nbnd),g2(:ncol,:nlay,:nbnd)) &
+    !$omp& private(tau12, tauscat12)
     do igpt = 1 , ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
@@ -759,7 +772,8 @@ contains
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:p1(:mom_lim,:ncol,:nlay,:ngpt)) &
-    !$omp& map(to:gpt_lims(:,:nbnd))
+    !$omp& map(to:gpt_lims(:,:nbnd)) &
+    !$omp& private(tau12, tauscat12)
     do igpt = 1 , ngpt
       do ilay = 1, nlay
         do icol = 1, ncol
