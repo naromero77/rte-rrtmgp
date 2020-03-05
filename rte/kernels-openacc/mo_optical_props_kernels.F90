@@ -59,7 +59,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:ssa(:ncol,:nlay,:ngpt),tau(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:f(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:g(:ncol,:nlay,:ngpt))
@@ -90,7 +90,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:tau(:ncol,:nlay,:ngpt),ssa(:ncol,:nlay,:ngpt),g(:ncol,:nlay,:ngpt))
     do igpt = 1, ngpt
       do ilay = 1, nlay
@@ -134,7 +134,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:tau2(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt))
     do igpt = 1, ngpt
@@ -158,7 +158,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:tau2(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:ngpt))
@@ -184,7 +184,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:tau2(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:ngpt))
@@ -212,7 +212,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt))
@@ -243,7 +243,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:g2(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:ngpt),tau2(:ncol,:nlay,:ngpt)) &
@@ -284,7 +284,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:p2(:1,:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:ngpt),tau2(:ncol,:nlay,:ngpt)) &
@@ -324,7 +324,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt))
@@ -359,7 +359,7 @@ contains
     ! --------------
     ! --------------
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:p1(:nmom1,:ncol,:nlay,:ngpt),ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
@@ -410,7 +410,7 @@ contains
     ! --------------
     mom_lim = min(nmom1, nmom2)
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:p2(:mom_lim,:ncol,:nlay,:ngpt)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:ngpt),tau2(:ncol,:nlay,:ngpt)) &
@@ -453,7 +453,7 @@ contains
     integer,  dimension(2,nbnd),         intent(in   ) :: gpt_lims ! Starting and ending gpoint for each band
     integer :: ibnd, igpt, icol, ilay
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:gpt_lims(:,:nbnd))
@@ -481,7 +481,7 @@ contains
     integer,  dimension(2,nbnd),         intent(in   ) :: gpt_lims ! Starting and ending gpoint for each band
     integer :: ibnd, igpt, icol, ilay
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd),ssa2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:gpt_lims(:,:nbnd))
@@ -509,7 +509,7 @@ contains
     integer,  dimension(2,nbnd),         intent(in   ) :: gpt_lims ! Starting and ending gpoint for each band
     integer :: ibnd, igpt, icol, ilay
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:gpt_lims(:,:nbnd),tau2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:nbnd))
@@ -540,7 +540,7 @@ contains
     integer  :: icol, ilay, igpt, ibnd
     real(wp) :: tau12
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
@@ -573,7 +573,7 @@ contains
     integer  :: icol, ilay, igpt, ibnd
     real(wp) :: tau12, tauscat12
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd),ssa2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
@@ -618,7 +618,7 @@ contains
     integer  :: icol, ilay, igpt, ibnd
     real(wp) :: tau12, tauscat12
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd),ssa2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
@@ -661,7 +661,7 @@ contains
     integer  :: icol, ilay, igpt, ibnd
     real(wp) :: tau12
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:tau2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
@@ -699,7 +699,7 @@ contains
     real(wp), dimension(nmom1) :: temp_moms ! TK
     integer  :: imom  !TK
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:tau1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt),p1(:nmom1,:ncol,:nlay,:ngpt)) &
@@ -752,7 +752,7 @@ contains
     real(wp) :: tau12, tauscat12
 
     mom_lim = min(nmom1, nmom2)
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:p2(:mom_lim,:ncol,:nlay,:nbnd)) &
     !$omp& map(tofrom:ssa1(:ncol,:nlay,:ngpt)) &
     !$omp& map(to:ssa2(:ncol,:nlay,:nbnd)) &
@@ -799,7 +799,7 @@ contains
                              nlay,ngpt), intent(out) :: array_out
     integer :: icol, ilay, igpt
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(from:array_out(:cole-cols+1,:nlay,:ngpt)) &
     !$omp& map(to:array_in(cols:cole,:nlay,:ngpt))
     do igpt = 1, ngpt
@@ -822,7 +822,7 @@ contains
 
     integer :: icol, ilay, igpt, imom
 
-    !$omp target teams distribute parallel do collapse(4) &
+    !$omp target teams distribute parallel do simd collapse(4) &
     !$omp& map(from:array_out(:nmom,:cole-cols+1,:nlay,:ngpt)) &
     !$omp& map(to:array_in(:nmom,cols:cole,:nlay,:ngpt))
     do igpt = 1, ngpt
@@ -851,7 +851,7 @@ contains
 
     integer :: icol, ilay, igpt
 
-    !$omp target teams distribute parallel do collapse(3) &
+    !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(to:ssa_in(cols:cole,:nlay,:ngpt)) &
     !$omp& map(from:tau_out(:cole-cols+1,:nlay,:ngpt)) &
     !$omp& map(to:tau_in(cols:cole,:nlay,:ngpt))

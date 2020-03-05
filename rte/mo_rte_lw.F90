@@ -257,7 +257,7 @@ contains
     nband = ops%get_nband()
     ngpt  = ops%get_ngpt()
     limits = ops%get_band_lims_gpoint()
-    !$omp target teams distribute parallel do collapse(2) map(to:arr_in,limits)
+    !$omp target teams distribute parallel do simd collapse(2) map(to:arr_in,limits)
     do iband = 1, nband
       do icol = 1, ncol
         do igpt = limits(1, iband), limits(2, iband)
