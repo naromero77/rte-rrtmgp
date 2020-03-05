@@ -182,6 +182,7 @@ module mo_gas_optics_rrtmgp
     module procedure check_extent_4D, check_extent_5D, check_extent_6D
   end interface check_extent
 contains
+
   ! --------------------------------------------------------------------------------------
   !
   ! Public procedures
@@ -353,12 +354,7 @@ contains
     !
     error_msg = check_extent(toa_src,     ncol,         ngpt, 'toa_src')
     if(error_msg  /= '') return
-    !$omp target teams distribute parallel do collapse(2)
-    do igpt = 1,ngpt
-       do icol = 1,ncol
-          toa_src(icol,igpt) = this%solar_src(igpt)
-       end do
-    end do
+    call bcast(toa_src, this%solar_src)
   end function gas_optics_ext
   !------------------------------------------------------------------------------------------
   !
@@ -501,7 +497,6 @@ contains
     !$omp target enter data map(alloc:tau,tau_rayleigh)
     !$omp target enter data map(alloc:col_mix,fminor)
     !$omp target enter data map(to:play,tlay,col_gas)
-    !$omp target enter data map(to:this)
     !$omp target enter data map(to:this%gpoint_flavor)
     call zero_array(ngpt, nlay, ncol, tau)
     call interpolation(               &
@@ -646,7 +641,6 @@ contains
     !-------------------------------------------------------------------
     ! Compute internal (Planck) source functions at layers and levels,
     !  which depend on mapping from spectral space that creates k-distribution.
-    !$omp target enter data map(to:sources)
     !$omp target enter data map(alloc:sources%lay_source,sources%lev_source_inc,sources%lev_source_dec,sources%sfc_source)
     !$omp target enter data map(alloc:sfc_source_t,lay_source_t,lev_source_inc_t,lev_source_dec_t) map(to:tlev_wk)
     call compute_Planck_source(ncol, nlay, nbnd, ngpt, &
@@ -656,18 +650,12 @@ contains
                 this%get_gpoint_bands(), this%get_band_lims_gpoint(), this%planck_frac, this%temp_ref_min,&
                 this%totplnk_delta, this%totplnk, this%gpoint_flavor,  &
                 sfc_source_t, lay_source_t, lev_source_inc_t, lev_source_dec_t)
-    !$omp target teams distribute parallel do collapse(2)
-    do igpt = 1, ngpt
-      do icol = 1, ncol
-        sources%sfc_source(icol,igpt) = sfc_source_t(igpt,icol)
-      end do
-    end do
+    call tpose(sources%sfc_source, sfc_source_t)
     call reorder123x321(lay_source_t, sources%lay_source)
     call reorder123x321(lev_source_inc_t, sources%lev_source_inc)
     call reorder123x321(lev_source_dec_t, sources%lev_source_dec)
     !$omp target exit data map(release:sfc_source_t,lay_source_t,lev_source_inc_t,lev_source_dec_t) map(from:tlev_wk)
     !$omp target exit data map(from:sources%lay_source,sources%lev_source_inc,sources%lev_source_dec,sources%sfc_source)
-    !$omp target exit data map(from:sources)
   end function source
   !--------------------------------------------------------------------------------------------------------------------
   !
@@ -1754,4 +1742,32 @@ contains
       check_range_3D = trim(label) // ' values out of range.'
   end function check_range_3D
   !------------------------------------------------------------------------------------------
+  subroutine bcast(a, b)
+    implicit none
+    real(wp) :: a(:,:), b(:)
+    integer :: i, j, m, n
+    m = size(a,1)
+    n = size(a,2)
+    !$omp target teams distribute parallel do simd collapse(2)
+    do j = 1,n
+      do i = 1,m
+        a(i,j) = b(j)
+      end do
+    end do
+  end subroutine
+  !------------------------------------------------------------------------------------------
+  subroutine tpose(a, b)
+    implicit none
+    real(wp) :: a(:,:), b(:,:)
+    integer :: i, j, m, n
+    m = size(a,1)
+    n = size(a,2)
+    !$omp target teams distribute parallel do simd collapse(2)
+    do j = 1,n
+      do i = 1,m
+        a(i,j) = b(j,i)
+      end do
+    end do
+  end subroutine
+
 end module mo_gas_optics_rrtmgp
