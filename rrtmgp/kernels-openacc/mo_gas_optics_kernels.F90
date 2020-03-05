@@ -69,7 +69,7 @@ contains
     !$omp target enter data map(alloc:jtemp, jpress, tropo, jeta, col_mix, fmajor, fminor)
     !$omp target enter data map(alloc:ftemp, fpress)
 
-    !$omp target teams distribute parallel do  simd collapse(2)
+    !$omp target teams distribute parallel do simd collapse(2) private(locpress)
     do ilay = 1, nlay
       do icol = 1, ncol
         ! index and factor for temperature interpolation
@@ -336,7 +336,7 @@ contains
     ! -----------------
 
     ! optical depth calculation for major species
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3) private(iflav, itropo, tau_major)
     do ilay = 1, nlay
       do icol = 1, ncol
         ! optical depth calculation for major species
@@ -413,7 +413,10 @@ contains
     ! Find the largest number of g-points per band
     max_gpt_diff = maxval( minor_limits_gpt(2,:) - minor_limits_gpt(1,:) )
 
-    !$omp target teams distribute parallel do  simd collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3) &
+    !$omp& private(dry_fact, gpte, gpts, iflav, igpt, kminor_loc, minor_loc, minor_start) &
+    !$omp& private(mycol_gas_0, mycol_gas_h2o, mycol_gas_imnr, myjtemp, myplay, mytlay) &
+    !$omp& private(scaling, tau_minor, vmr_fact)
     do ilay = 1 , nlay
       do icol = 1, ncol
         do igpt0 = 0, max_gpt_diff
@@ -515,7 +518,7 @@ contains
     integer  :: itropo
     ! -----------------
 
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3) private(iflav, itropo, k)
     do ilay = 1, nlay
       do icol = 1, ncol
         do igpt = 1, ngpt
@@ -575,7 +578,7 @@ contains
     !$omp target enter data map(alloc:pfrac, planck_function)
 
     ! Calculation of fraction of band's Planck irradiance associated with each g-point
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3) private(iflav, itropo)
     do icol = 1, ncol
       do ilay = 1, nlay
         do igpt = 1, ngpt
@@ -594,21 +597,21 @@ contains
     ! Planck function by band for the surface
     ! Compute surface source irradiance for g-point, equals band irradiance x fraction for g-point
     !
-    !$omp target teams distribute parallel do
+    !$omp target teams distribute parallel do simd 
     do icol = 1, ncol
       call interpolate1D(tsfc(icol), temp_ref_min, totplnk_delta, totplnk, planck_function(1:nbnd,1,icol))
     end do
     !
     ! Map to g-points
     !
-    !$omp target teams distribute parallel do collapse(2)
+    !$omp target teams distribute parallel do simd collapse(2)
     do igpt = 1, ngpt
       do icol = 1, ncol
         sfc_src(igpt,icol) = pfrac(igpt,sfc_lay,icol) * planck_function(gpoint_bands(igpt), 1, icol)
       end do
     end do ! icol
 
-    !$omp target teams distribute parallel do collapse(2)
+    !$omp target teams distribute parallel do simd collapse(2)
     do icol = 1, ncol
       do ilay = 1, nlay
         ! Compute layer source irradiance for g-point, equals band irradiance x fraction for g-point
@@ -621,7 +624,7 @@ contains
     ! Explicitly unroll a time-consuming loop here to increase instruction-level parallelism on a GPU
     ! Helps to achieve higher bandwidth
     !
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3)
     do icol = 1, ncol, 2
       do ilay = 1, nlay
         do igpt = 1, ngpt
@@ -633,12 +636,12 @@ contains
     end do ! icol
 
     ! compute level source irradiances for each g-point, one each for upward and downward paths
-    !$omp target teams distribute parallel do
+    !$omp target teams distribute parallel do simd 
     do icol = 1, ncol
       call interpolate1D(tlev(icol,     1), temp_ref_min, totplnk_delta, totplnk, planck_function(1:nbnd,       1,icol))
     end do
 
-    !$omp target teams distribute parallel do collapse(2)
+    !$omp target teams distribute parallel do simd collapse(2)
     do icol = 1, ncol
       do ilay = 2, nlay+1
         call interpolate1D(tlev(icol,ilay), temp_ref_min, totplnk_delta, totplnk, planck_function(1:nbnd,ilay,icol))
@@ -650,7 +653,7 @@ contains
     !
     ! Same unrolling as mentioned before
     !
-    !$omp target teams distribute parallel do collapse(3)
+    !$omp target teams distribute parallel do simd collapse(3)
     do icol = 1, ncol, 2
       do ilay = 1, nlay
         do igpt = 1, ngpt
@@ -763,7 +766,8 @@ contains
     !
     !$acc parallel default(none) vector_length(tile*tile)
     !$omp target teams distribute parallel do simd collapse(3) &
-    !$omp& map(tofrom:tau, ssa, g) map(to:tau_rayleigh, tau_abs)
+    !$omp& map(tofrom:tau, ssa, g) map(to:tau_rayleigh, tau_abs) &
+    !$omp& private(icol, igpt, igdiff, t)
     do ilay = 1, nlay
       do icol0 = 1, ncol, tile
         do igpt0 = 1, ngpt, tile
@@ -810,7 +814,8 @@ contains
     ! -----------------------
     !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:tau, ssa, p) &
-    !$omp& map(to:tau_rayleigh(:ngpt, :nlay, :ncol), tau_abs(:ngpt, :nlay, :ncol))
+    !$omp& map(to:tau_rayleigh(:ngpt, :nlay, :ncol), tau_abs(:ngpt, :nlay, :ncol)) &
+    !$omp$ private(t)
     do icol = 1, ncol
       do ilay = 1, nlay
         do igpt = 1, ngpt
