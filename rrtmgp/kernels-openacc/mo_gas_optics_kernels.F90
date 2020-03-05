@@ -770,7 +770,6 @@ contains
       do icol0 = 1, ncol, tile
         do igpt0 = 1, ngpt, tile
 
-          !$omp parallel do simd collapse(2)
           do igdiff = 0, tile-1
             do icdiff = 0, tile-1
               icol = icol0 + icdiff
