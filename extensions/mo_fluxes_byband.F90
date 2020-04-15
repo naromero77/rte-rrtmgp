@@ -102,6 +102,7 @@ contains
 
     ! -------
     !$acc enter data copyin(band_lims)
+    !$omp target enter data map(to:band_lims)
     ! Band-by-band fluxes
     ! Up flux
     if(associated(this%bnd_flux_up)) then
@@ -132,6 +133,7 @@ contains
       end if
     end if
     !$acc exit data delete(band_lims)
+    !$omp target exit data map(release:band_lims)
   end function reduce_byband
   ! --------------------------------------------------------------------------------------
   ! Are any fluxes desired from this set of g-point fluxes? We can tell because memory will
