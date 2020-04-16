@@ -883,5 +883,38 @@ contains
       end do
     end do
   end subroutine combine_and_reorder_nstr
+
   ! ----------------------------------------------------------
+  !
+  ! In-house subroutine for handling minloc and maxloc for
+  ! compilers which do not support GPU versions
+  !
+  subroutine minmaxloc(i, mask, a, minl, maxl)
+    !$omp declare target
+    implicit none
+    integer :: i, minl, maxl
+    logical(wl) :: mask(:,:)
+    real(wp) :: a(:,:)
+    integer :: j, n
+    real(wp) :: aij, amax, amin
+    n = size(a,2)
+    amax = -huge(amax)
+    amin = huge(amin)
+    do j = 1, n
+      aij = a(i,j)
+      if (mask(i,j)) then
+        if (aij.lt.amin) then
+          amin = aij
+          minl = j
+        end if
+      else
+        if (aij.gt.amax) then
+          amax = aij
+          maxl = j
+        end if
+      end if
+    end do
+  end subroutine
+  ! ----------------------------------------------------------
+
 end module mo_gas_optics_kernels
