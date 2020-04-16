@@ -805,16 +805,16 @@ contains
     integer, parameter :: tile = 32
     ! -----------------------
     !$acc data copy(tau, ssa, g)                 &
-    !$omp data map(tofrom:tau, ssa, g) &
     !$acc      copyin(tau_rayleigh, tau_abs)
-    !$omp map(to:tau_rayleigh, tau_abs)
 
     ! We are using blocking memory accesses here to improve performance
     !  of the transpositions. See also comments in mo_rrtmgp_util_reorder_kernels.F90
     !
     !$acc parallel default(none) vector_length(tile*tile)
     !$acc loop gang collapse(3)
-      do ilay = 1, nlay
+    !$omp target teams distribute parallel do simd collapse(3) &
+    !$omp& map(tofrom:tau, ssa, g) map(to:tau_rayleigh, tau_abs)
+    do ilay = 1, nlay
       do icol0 = 1, ncol, tile
         do igpt0 = 1, ngpt, tile
 
@@ -842,9 +842,7 @@ contains
       end do
     end do
     !$acc end parallel
-    !$omp end target teams distribute
     !$acc end data
-    !$omp end data
   end subroutine combine_and_reorder_2str
   ! ----------------------------------------------------------
   !
