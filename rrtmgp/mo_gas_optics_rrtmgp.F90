@@ -568,7 +568,6 @@ contains
     !$acc enter data create(col_mix, fminor)
     !$omp target enter data map(alloc:col_mix, fminor)
     !$acc enter data copyin(this)
-    !$omp target enter data map(to:this)
     !$acc enter data copyin(this%gpoint_flavor)
     !$omp target enter data map(to:this%gpoint_flavor)
     call zero_array(ngpt, nlay, ncol, tau)
@@ -804,7 +803,6 @@ contains
     ! Compute internal (Planck) source functions at layers and levels,
     !  which depend on mapping from spectral space that creates k-distribution.
     !$acc enter data copyin(sources)
-    !$omp target enter data map(to:sources)
     !$acc enter data create(sources%lay_source, sources%lev_source_inc, sources%lev_source_dec, sources%sfc_source)
     !$omp target enter data map(alloc:sources%lay_source, sources%lev_source_inc, sources%lev_source_dec, sources%sfc_source)
     !$acc enter data create(sfc_source_t, lay_source_t, lev_source_inc_t, lev_source_dec_t) attach(tlev_wk)
@@ -844,7 +842,6 @@ contains
     !$acc exit data copyout(sources%lay_source, sources%lev_source_inc, sources%lev_source_dec, sources%sfc_source)
     !$omp target exit data map(from:sources%lay_source, sources%lev_source_inc, sources%lev_source_dec, sources%sfc_source)
     !$acc exit data copyout(sources)
-    !$omp target exit data map(from:sources)
   end function source
   !--------------------------------------------------------------------------------------------------------------------
   !
@@ -902,7 +899,6 @@ contains
     character(len = 128) :: err_message
     ! ----
     !$acc enter data create(this)
-    !$omp target enter data map(alloc:this)
     err_message = init_abs_coeffs(this, &
                                   available_gases, &
                                   gas_names, key_species,    &
@@ -1010,7 +1006,6 @@ contains
     integer :: ngpt
     ! ----
     !$acc enter data create(this)
-    !$omp target enter data map(alloc:this)
     err_message = init_abs_coeffs(this, &
                                   available_gases, &
                                   gas_names, key_species,    &
