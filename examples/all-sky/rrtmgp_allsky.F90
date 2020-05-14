@@ -220,14 +220,13 @@ program rte_rrtmgp_clouds
   select type(atmos)
     class is (ty_optical_props_1scl)
       !$acc enter data copyin(atmos)
-      !$omp target enter data map(to:atmos)
       call stop_on_err(atmos%alloc_1scl(ncol, nlay, k_dist))
       !$acc enter data copyin(atmos) create(atmos%tau)
-      !$omp target enter data map(to:atmos) map(alloc:atmos%tau)
+      !$omp target enter data map(alloc:atmos%tau)
     class is (ty_optical_props_2str)
       call stop_on_err(atmos%alloc_2str( ncol, nlay, k_dist))
       !$acc enter data copyin(atmos) create(atmos%tau, atmos%ssa, atmos%g)
-      !$omp target enter data map(to:atmos) map(alloc:atmos%tau, atmos%ssa, atmos%g)
+      !$omp target enter data map(alloc:atmos%tau, atmos%ssa, atmos%g)
     class default
       call stop_on_err("rte_rrtmgp_clouds: Don't recognize the kind of optical properties ")
   end select
@@ -235,11 +234,11 @@ program rte_rrtmgp_clouds
     class is (ty_optical_props_1scl)
       call stop_on_err(clouds%alloc_1scl(ncol, nlay))
       !$acc enter data copyin(clouds) create(clouds%tau)
-      !$omp target enter data map(to:clouds) map(alloc:clouds%tau)
+      !$omp target enter data map(alloc:clouds%tau)
     class is (ty_optical_props_2str)
       call stop_on_err(clouds%alloc_2str(ncol, nlay))
       !$acc enter data copyin(clouds) create(clouds%tau, clouds%ssa, clouds%g)
-      !$omp target enter data map(to:clouds) map(alloc:clouds%tau, clouds%ssa, clouds%g)
+      !$omp target enter data map(alloc:clouds%tau, clouds%ssa, clouds%g)
     class default
       call stop_on_err("rte_rrtmgp_clouds: Don't recognize the kind of optical properties ")
   end select
