@@ -347,7 +347,7 @@ program rte_rrtmgp_clouds
     fluxes%flux_dn => flux_dn(:,:)
     if(is_lw) then
       !$acc enter data create(lw_sources, lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source)
-      !$omp target enter data map(alloc:lw_sources, lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source)
+      !$omp target enter data map(alloc:lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source)
       call stop_on_err(k_dist%gas_optics(p_lay, p_lev, &
                                          t_lay, t_sfc, &
                                          gas_concs,    &
@@ -360,7 +360,7 @@ program rte_rrtmgp_clouds
                               emis_sfc,        &
                               fluxes))
       !$acc exit data delete(lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source, lw_sources)
-      !$omp target exit data map(release:lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source, lw_sources)
+      !$omp target exit data map(release:lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source)
     else
       !$acc enter data create(toa_flux)
       !$omp target enter data map(alloc:toa_flux)
