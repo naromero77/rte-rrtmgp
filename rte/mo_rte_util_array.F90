@@ -172,8 +172,6 @@ contains
     maxValue = maxval(array)
     !$acc end kernels
     !$omp end target
-    print *, 'minValue =', minValue
-    print *, 'maxValue =', maxValue
     any_vals_outside_2D = minValue < checkMin .or. maxValue > checkMax
 
   end function any_vals_outside_2D
