@@ -1,0 +1,93 @@
+# build and run tests for Cray Fortran OpenMP compiler and run on Cori-GPU
+#
+# The CI script assume that an Anaconda environment under regular user
+# account is availalble under the default Python module which contains
+# Anaconda as well as having the following environment pre-created.
+# environment should be already installed:
+# module load python
+# conda create --yes -n e3sm python=3.7
+# source activate e3sm
+# conda install --yes urllib3 netcdf4 xarray dask
+#
+# Scratch directory name is:
+# /global/cscratch1/ecp-gitlab/$username
+
+# Common step for each pipeline.
+before_script:
+  - echo "Setting up RTE-RRTMGP environment variables"
+  - echo "CI_PROJECT_DIR =" ${CI_PROJECT_DIR}
+  - export RRTMGP_ROOT=$PWD
+  - export RRTMGP_DIR=$PWD/build
+  - module load python
+  - source activate e3sm
+
+after_script:
+  - echo "Transmit CI Results to GitHub"
+  - echo "To be completed"
+
+stages:
+  - build
+  - test
+
+# run using the Cori runner
+.ci-runner:
+  tags:
+    - cori:
+
+# build using OpenMP flag
+build-cori-gpu:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "omp-45-cray"'
+  extends: .ci-runner
+  stage: build
+  script:
+    - echo "Running build"
+    - echo "Loading modules"
+    - module load esslurm
+    - module load cdt/20.3
+    - module swap PrgEnv-intel PrgEnv-cray
+    - module swap craype-{${CRAY_CPU_TARGET},x86-skylake}
+    - module load cuda
+    - export CRAY_ACCEL_TARGET=nvidia70
+    - echo "Building RTE and RRTMGP libraries"
+    - cd ${RRTMGP_ROOT}/build
+    - rm -f Makefile.conf
+    - export FC=ftn
+    - export FCFLAGS="-hnoacc -homp -ef -O0"
+    - make clean
+    - make
+    - echo "Building clear sky example"
+    - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
+    - export HDF5HOME=$CRAY_HDF5_DIR/cray/9.0/lib
+    - export NCHOME=$CRAY_NETCDF_DIR/cray/9.0/lib
+    - export NFHOME=$CRAY_NETCDF_DIR/cray/9.0/lib
+    - export RRTMGP_BUILD=${RRTMGP_ROOT}/build
+    - make clean
+    - make
+    - echo "Building all sky example"
+    - cd ${RRTMGP_ROOT}/examples/all-sky
+    - make clean
+    - make
+
+# run tests using the binary built in the build stage
+# can probably be generalized except for the scheduling
+# variables where are specific to Cori-GPU
+test-cori-gpu:
+  extends: .ci-runner
+  needs: ["build-cori-gpu"]
+  stage: test
+  script:
+    - echo "Running clear sky test"
+    - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
+    - chmod u+x ./run-rfmip-examples.py
+    - chmod u+x ./compare-to-reference.py
+    - srun ./run-rfmip-examples.py
+    - ./compare-to-reference.py --fail=1.e-4
+    - echo "Running all sky test"
+    - cd ${RRTMGP_ROOT}/examples/all-sky
+    - chmod u+x	./run-allsky-example.py
+    - chmod u+x	./compare-to-reference.py
+    - srun ./run-allsky-example.py
+    - ./compare-to-reference.py
+  variables:
+    SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
