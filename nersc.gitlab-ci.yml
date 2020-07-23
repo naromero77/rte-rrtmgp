@@ -32,7 +32,7 @@ stages:
 # run using the Cori runner
 .ci-runner:
   tags:
-    - cori:
+    - cori
 
 # build using OpenMP flag
 build-cori-gpu:
