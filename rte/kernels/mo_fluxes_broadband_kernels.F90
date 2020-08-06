@@ -28,11 +28,7 @@ contains
     !
     ! Spectral reduction over all points
     !
-#ifndef _OPENMP
-  pure subroutine sum_broadband(ncol, nlev, ngpt, spectral_flux, broadband_flux) bind(C, name="sum_broadband")
-#else
   subroutine sum_broadband(ncol, nlev, ngpt, spectral_flux, broadband_flux) bind(C, name="sum_broadband")
-#endif
     integer,                               intent(in ) :: ncol, nlev, ngpt
     real(wp), dimension(ncol, nlev, ngpt), intent(in ) :: spectral_flux
     real(wp), dimension(ncol, nlev),       intent(out) :: broadband_flux
@@ -63,13 +59,8 @@ contains
   !
   ! Net flux: Spectral reduction over all points
   !
-#ifndef _OPENMP
-  pure subroutine net_broadband_full(ncol, nlev, ngpt, spectral_flux_dn, spectral_flux_up, broadband_flux_net) &
-    bind(C, name="net_broadband_full")
-#else
   subroutine net_broadband_full(ncol, nlev, ngpt, spectral_flux_dn, spectral_flux_up, broadband_flux_net) &
     bind(C, name="net_broadband_full")
-#endif
     integer,                               intent(in ) :: ncol, nlev, ngpt
     real(wp), dimension(ncol, nlev, ngpt), intent(in ) :: spectral_flux_dn, spectral_flux_up
     real(wp), dimension(ncol, nlev),       intent(out) :: broadband_flux_net
@@ -106,13 +97,8 @@ contains
   !
   ! Net flux when bradband flux up and down are already available
   !
-#ifndef _OPENMP
-  pure subroutine net_broadband_precalc(ncol, nlev, flux_dn, flux_up, broadband_flux_net) &
-    bind(C, name="net_broadband_precalc")
-#else
   subroutine net_broadband_precalc(ncol, nlev, flux_dn, flux_up, broadband_flux_net) &
     bind(C, name="net_broadband_precalc")
-#endif
     integer,                         intent(in ) :: ncol, nlev
     real(wp), dimension(ncol, nlev), intent(in ) :: flux_dn, flux_up
     real(wp), dimension(ncol, nlev), intent(out) :: broadband_flux_net

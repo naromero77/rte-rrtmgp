@@ -1609,11 +1609,7 @@ contains
 !    unsafe if ssa*g =1.
 !     
 ! ---------------------------------------------------------------
-#ifndef _OPENMP
-  pure subroutine scaling_1rescl(ncol, nlay, ngpt, tauLoc, scaling, tau, ssa, g)
-#else
   subroutine scaling_1rescl(ncol, nlay, ngpt, tauLoc, scaling, tau, ssa, g)
-#endif
     integer ,                              intent(in)    :: ncol
     integer ,                              intent(in)    :: nlay
     integer ,                              intent(in)    :: ngpt
@@ -1660,11 +1656,7 @@ contains
 !  Safe implementation
 !     
 ! ---------------------------------------------------------------
-#ifndef _OPENMP
-  pure subroutine scaling_1rescl_safe(ncol, nlay, ngpt, tauLoc, scaling, tau, ssa, g)
-#else
   subroutine scaling_1rescl_safe(ncol, nlay, ngpt, tauLoc, scaling, tau, ssa, g)
-#endif
     integer ,                              intent(in)    :: ncol
     integer ,                              intent(in)    :: nlay
     integer ,                              intent(in)    :: ngpt
