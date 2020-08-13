@@ -383,7 +383,7 @@ contains
     if(error_msg /= "") return
 
     p => this%concs(igas)%conc(:,:)
-    !$acc data copyout (array) present(this, this%concs)
+    !$acc enter data copyin(this%concs)
     !$omp target data map(from:array)
     if(size(this%concs(igas)%conc, 1) > 1) then      ! Concentration stored as 2D
       !$acc parallel loop collapse(2)
@@ -423,7 +423,7 @@ contains
         end do
       end do
     end if
-    !$acc end data
+    !$acc exit data copyout(array)
     !$omp end target data
 
   end function get_vmr_2d
