@@ -113,11 +113,11 @@ contains
       lev_source_dn => lev_source_dec
     end if
 
-    !$acc enter data copyin(d,tau,sfc_src,sfc_emis,lev_source_dec,lev_source_inc,lay_source,radn_dn)
-    !$omp target enter data map(to:d, tau, sfc_src, sfc_emis, lev_source_dec, lev_source_inc, lay_source, radn_dn)
+    !$acc enter data copyin(d,tau,sfc_src,sfc_emis,lay_source,radn_dn)
+    !$omp target enter data map(to:d, tau, sfc_src, sfc_emis, lay_source, radn_dn)
     !$acc enter data create(tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo,radn_up)
     !$omp target enter data map(alloc:tau_loc, trans, source_dn, source_up, source_sfc, sfc_albedo, radn_up)
-    !$acc enter data attach(lev_source_up,lev_source_dn)
+    !$acc enter data copyin(lev_source_up,lev_source_dn)
     !$omp target enter data map(to:lev_source_up, lev_source_dn)
 
     !$acc parallel loop collapse(2)
@@ -199,9 +199,9 @@ contains
 
     !$acc exit data copyout(radn_dn,radn_up)
     !$omp target exit data map(from:radn_dn, radn_up)
-    !$acc exit data delete(d,tau,sfc_src,sfc_emis,lev_source_dec,lev_source_inc,lay_source,tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo)
-    !$omp target exit data map(release:d, tau, sfc_src, sfc_emis, lev_source_dec, lev_source_inc, lay_source, tau_loc, trans, source_dn, source_up, source_sfc, sfc_albedo)
-    !$acc exit data detach(lev_source_up,lev_source_dn)
+    !$acc exit data delete(d,tau,sfc_src,sfc_emis,lay_source,tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo)
+    !$omp target exit data map(release:d, tau, sfc_src, sfc_emis, lay_source, tau_loc, trans, source_dn, source_up, source_sfc, sfc_albedo)
+    !$acc exit data copyout(lev_source_up,lev_source_dn)
     !$omp target exit data map(from:lev_source_up, lev_source_dn)
 
   end subroutine lw_solver_noscat
@@ -1391,7 +1391,8 @@ contains
     !$omp target enter data map(alloc:tau_loc, trans, source_dn, source_up, source_sfc, sfc_albedo, radn_up)
     !$acc enter data create(sfcSource, An, Cn)
     !$omp target enter data map(alloc:sfcSource, An, Cn)
-    !$acc enter data attach(lev_source_up,lev_source_dn)
+    !NAR!$acc enter data attach(lev_source_up,lev_source_dn)
+    !$acc enter data copyin(lev_source_up,lev_source_dn)
     !$omp target enter data map(to:lev_source_up, lev_source_dn)
 
     !$acc enter data create(rad_up_Jac, rad_dn_Jac, source_sfcJac)
@@ -1472,7 +1473,8 @@ contains
     !$omp target exit data map(release:scaling)
     !$acc exit data delete(d,tau,sfc_src,sfc_emis,lev_source_dec,lev_source_inc,lay_source,tau_loc,trans,source_dn,source_up,source_sfc,sfc_albedo)
     !$omp target exit data map(release:d, tau, sfc_src, sfc_emis, lev_source_dec, lev_source_inc, lay_source, tau_loc, trans, source_dn, source_up, source_sfc, sfc_albedo)
-    !$acc exit data detach(lev_source_up,lev_source_dn)
+    !NAR!$acc exit data detach(lev_source_up,lev_source_dn)
+    !$acc exit data copyout(lev_source_up,lev_source_dn)
     !$omp target exit data map(from:lev_source_up, lev_source_dn)
 
   end subroutine lw_solver_1rescl
