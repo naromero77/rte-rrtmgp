@@ -166,7 +166,7 @@ contains
 
     real(wp) :: minValue, maxValue
 
-    !$acc kernels copyin(array)
+    !$acc kernels present_or_copyin(array)
     !$omp target map(to:array) map(from:minValue, maxValue)
     minValue = minval(array)
     maxValue = maxval(array)
