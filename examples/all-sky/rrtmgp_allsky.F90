@@ -220,13 +220,12 @@ program rte_rrtmgp_clouds
   !
   select type(atmos)
     class is (ty_optical_props_1scl)
-      !$acc enter data copyin(atmos)
       call stop_on_err(atmos%alloc_1scl(ncol, nlay, k_dist))
-      !$acc enter data copyin(atmos) create(atmos%tau)
+      !$acc enter data create(atmos%tau)
       !$omp target enter data map(alloc:atmos%tau)
     class is (ty_optical_props_2str)
       call stop_on_err(atmos%alloc_2str( ncol, nlay, k_dist))
-      !$acc enter data copyin(atmos) create(atmos%tau, atmos%ssa, atmos%g)
+      !$acc enter data create(atmos%tau, atmos%ssa, atmos%g)
       !$omp target enter data map(alloc:atmos%tau, atmos%ssa, atmos%g)
     class default
       call stop_on_err("rte_rrtmgp_clouds: Don't recognize the kind of optical properties ")
@@ -234,11 +233,11 @@ program rte_rrtmgp_clouds
   select type(clouds)
     class is (ty_optical_props_1scl)
       call stop_on_err(clouds%alloc_1scl(ncol, nlay))
-      !$acc enter data copyin(clouds) create(clouds%tau)
+      !$acc enter data create(clouds%tau)
       !$omp target enter data map(alloc:clouds%tau)
     class is (ty_optical_props_2str)
       call stop_on_err(clouds%alloc_2str(ncol, nlay))
-      !$acc enter data copyin(clouds) create(clouds%tau, clouds%ssa, clouds%g)
+      !$acc enter data create(clouds%tau, clouds%ssa, clouds%g)
       !$omp target enter data map(alloc:clouds%tau, clouds%ssa, clouds%g)
     class default
       call stop_on_err("rte_rrtmgp_clouds: Don't recognize the kind of optical properties ")
@@ -347,7 +346,7 @@ program rte_rrtmgp_clouds
     fluxes%flux_up => flux_up(:,:)
     fluxes%flux_dn => flux_dn(:,:)
     if(is_lw) then
-      !$acc enter data create(lw_sources, lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source)
+      !$acc enter data create(lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source)
       !$omp target enter data map(alloc:lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source)
       call stop_on_err(k_dist%gas_optics(p_lay, p_lev, &
                                          t_lay, t_sfc, &
@@ -360,7 +359,7 @@ program rte_rrtmgp_clouds
                               lw_sources,      &
                               emis_sfc,        &
                               fluxes))
-      !$acc exit data delete(lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source, lw_sources)
+      !$acc exit data delete(lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source)
       !$omp target exit data map(release:lw_sources%lay_source, lw_sources%lev_source_inc, lw_sources%lev_source_dec, lw_sources%sfc_source)
     else
       !$acc enter data create(toa_flux)

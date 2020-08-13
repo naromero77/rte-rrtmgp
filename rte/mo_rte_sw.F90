@@ -162,7 +162,7 @@ contains
         !
         ! Direct beam only
         !
-        !$acc enter data copyin(atmos, atmos%tau)
+        !$acc enter data copyin(atmos%tau)
         !$omp target enter data map(to:atmos%tau)
         error_msg =  atmos%validate()
         if(len_trim(error_msg) > 0) return
@@ -174,13 +174,13 @@ contains
         !
         !gpt_flux_up = 0._wp
         !gpt_flux_dn = 0._wp
-        !$acc exit data delete(atmos%tau, atmos)
+        !$acc exit data delete(atmos%tau)
         !$omp target exit data map(release:atmos%tau)
       class is (ty_optical_props_2str)
         !
         ! two-stream calculation with scattering
         !
-        !$acc enter data copyin(atmos, atmos%tau, atmos%ssa, atmos%g)
+        !$acc enter data copyin(atmos%tau, atmos%ssa, atmos%g)
         !$omp target enter data map(to:atmos%tau, atmos%ssa, atmos%g)
         error_msg =  atmos%validate()
         if(len_trim(error_msg) > 0) return
@@ -188,7 +188,7 @@ contains
                                atmos%tau, atmos%ssa, atmos%g, mu0,      &
                                sfc_alb_dir_gpt, sfc_alb_dif_gpt,        &
                                gpt_flux_up, gpt_flux_dn, gpt_flux_dir)
-        !$acc exit data delete(atmos%tau, atmos%ssa, atmos%g, atmos)
+        !$acc exit data delete(atmos%tau, atmos%ssa, atmos%g)
         !$omp target exit data map(release:atmos%tau, atmos%ssa, atmos%g)
         !$acc exit data delete(sfc_alb_dir_gpt, sfc_alb_dif_gpt)
         !$omp target exit data map(release:sfc_alb_dir_gpt, sfc_alb_dif_gpt)

@@ -522,7 +522,7 @@ contains
       select type(optical_props)
       type is (ty_optical_props_1scl)
         !$acc parallel loop gang vector default(none) collapse(3) &
-        !$acc               copyin(optical_props) copyout(optical_props%tau)
+        !$acc               copyout(optical_props%tau)
         !$omp target teams distribute parallel do simd collapse(3) &
         !$omp map(from:optical_props%tau)
 
@@ -537,7 +537,7 @@ contains
         end do
       type is (ty_optical_props_2str)
         !$acc parallel loop gang vector default(none) collapse(3) &
-        !$acc               copyin(optical_props) copyout(optical_props%tau, optical_props%ssa, optical_props%g)
+        !$acc               copyout(optical_props%tau, optical_props%ssa, optical_props%g)
         !$omp target teams distribute parallel do simd collapse(3) &
         !$omp map(from:optical_props%tau, optical_props%ssa, optical_props%g)
         do ibnd = 1, nbnd
