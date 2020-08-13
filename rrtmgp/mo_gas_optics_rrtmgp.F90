@@ -925,7 +925,7 @@ contains
              this%planck_frac(size(planck_frac,1), size(planck_frac,2), size(planck_frac,3), size(planck_frac,4)) )
     !$acc enter data create(this%totplnk, this%planck_frac)
     !$omp target enter data map(alloc:this%totplnk, this%planck_frac)
-    !$acc kernels
+    !$acc kernels present(this%totplnk,this%planck_frac)
     !$omp target
     this%totplnk = totplnk
     this%planck_frac = planck_frac
@@ -1035,7 +1035,7 @@ contains
              this%solar_source_sunspot(ngpt), this%solar_source(ngpt))
     !$acc enter data create(this%solar_source_quiet, this%solar_source_facular, this%solar_source_sunspot, this%solar_source)
     !$omp target enter data map(alloc:this%solar_source_quiet, this%solar_source_facular, this%solar_source_sunspot, this%solar_source)
-    !$acc kernels
+    !$acc kernels present(this%solar_source_quiet, this%solar_source_facular, this%solar_source_sunspot, this%solar_source)
     !$omp target
     this%solar_source_quiet   = solar_quiet
     this%solar_source_facular = solar_facular

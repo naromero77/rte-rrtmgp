@@ -160,7 +160,8 @@ contains
     this%radice_upr = radice_upr
 
     ! Load LUT coefficients
-    !$acc kernels
+    !$acc kernels present(this,this%lut_extliq,this%lut_ssaliq,this%lut_asyliq) &
+    !$acc&        present(this%lut_extice,this%lut_ssaice,this%lut_asyice)
     !$omp target
     this%lut_extliq = lut_extliq
     this%lut_ssaliq = lut_ssaliq
@@ -289,7 +290,10 @@ contains
     !
     ! Load data
     !
-    !$acc kernels
+    !$acc kernels present(this,this%pade_extliq,this%pade_ssaliq,this%pade_asyliq) &
+    !$acc&        present(this%pade_extice,this%pade_ssaice,this%pade_asyice,this%pade_sizreg_extliq) &
+    !$acc&        present(this%pade_sizreg_ssaliq,this%pade_sizreg_asyliq,this%pade_sizreg_extice) &
+    !$acc&        present(this%pade_sizreg_ssaice,this%pade_sizreg_asyice)
     !$omp target
     this%pade_extliq = pade_extliq
     this%pade_ssaliq = pade_ssaliq
