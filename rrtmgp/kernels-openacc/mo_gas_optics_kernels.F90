@@ -820,7 +820,7 @@ contains
     ! We are using blocking memory accesses here to improve performance
     !  of the transpositions. See also comments in mo_rrtmgp_util_reorder_kernels.F90
     !
-    !$acc parallel default(none) vector_length(tile*tile)
+    !$acc parallel vector_length(tile*tile)
     !$acc loop gang collapse(3)
     !$omp target teams distribute parallel do simd collapse(3) &
     !$omp& map(tofrom:tau, ssa, g) map(to:tau_rayleigh, tau_abs)
