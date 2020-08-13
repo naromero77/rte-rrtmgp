@@ -432,7 +432,8 @@ contains
     ! Interpolation variables used in major gas but not elsewhere, so don't need exporting
     !
     real(wp), dimension(ncol,nlay,  this%get_ngas()) :: vmr     ! volume mixing ratios
-    real(wp), dimension(ncol,nlay,0:this%get_ngas()) :: col_gas ! column amounts for each gas, plus col_dry
+    ! real(wp), dimension(ncol,nlay,0:this%get_ngas()) :: col_gas ! column amounts for each gas, plus col_dr
+    real(wp), dimension(ncol,nlay,0:get_ngas(this)) :: col_gas ! column amounts for each gas, plus col_dry
     real(wp), dimension(2,    get_nflav(this),ncol,nlay) :: col_mix ! combination of major species's column amounts
                                                          ! index(1) : reference temperature level
                                                          ! index(2) : flavor
