@@ -107,7 +107,7 @@ program rte_rrtmgp_clouds
 
   character(len=8) :: char_input
   integer  :: nUserArgs=0, nloops
-  logical :: use_luts = .true., write_fluxes = .true.
+  logical :: use_luts = .true., write_fluxes = .false.
   integer, parameter :: ngas = 8
   character(len=3), dimension(ngas) &
                      :: gas_names = ['h2o', 'co2', 'o3 ', 'n2o', 'co ', 'ch4', 'o2 ', 'n2 ']
