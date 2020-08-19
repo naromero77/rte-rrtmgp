@@ -404,6 +404,10 @@ program rte_rrtmgp_clouds
   print *, "                - per column(ms):", (finish_all-start_all) / real(ncol*nloops) / (1.0e-3*clock_rate)
 #endif
 
+  do iloop = 1, nloops
+     print *, "iloop = ", iloop, "time = ", elapsed(iloop) / real(clock_rate)
+  end do
+
   if(is_lw) then
     !$acc exit data copyout(flux_up, flux_dn)
     !$omp target exit data map(from:flux_up, flux_dn)
