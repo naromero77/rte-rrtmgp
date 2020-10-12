@@ -79,11 +79,25 @@ contains
 
     real(wp) :: minValue
 
+#ifdef _OPENMP
+    integer :: dim1, dim2, dim3, i, j, k
+    dim1 = size(array,1)
+    dim2 = size(array,2)
+    dim3 = size(array,3)
+    minValue = array(1,1,1) ! initialize to some value
+    !$omp target teams distribute parallel do simd collapse(3) map(to:array, dim1, dim2, dim3) map(tofrom:minValue) reduction(min:minValue)
+    do i = 1, dim1
+       do j = 1, dim2
+          do k = 1, dim3
+             minValue = min(minValue,array(i,j,k))
+          enddo
+       enddo
+    enddo
+#else
     !$acc kernels copyin(array)
-    !$omp target map(to:array) map(from:minValue)
     minValue = minval(array)
     !$acc end kernels
-    !$omp end target
+#endif
 
     any_vals_less_than_3D = (minValue < check_value)
 
