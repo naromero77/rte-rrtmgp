@@ -212,7 +212,6 @@ contains
           do k = 1, dim3
              minValue = min(minValue,array(i,j,k))
              maxValue = max(maxValue,array(i,j,k))
-             endif
           enddo
        enddo
     enddo
