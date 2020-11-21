@@ -25,6 +25,7 @@ before_script:
   - module load cgpu
   - module swap PrgEnv-{intel,cray}
   - module swap craype-{${CRAY_CPU_TARGET},x86-skylake}
+  - module swap cce cce/10.0.3
   - module load cuda
   - export CRAY_ACCEL_TARGET=nvidia70
 
