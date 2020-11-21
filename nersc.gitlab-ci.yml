@@ -34,8 +34,7 @@ after_script:
   - echo "To be completed"
 
 stages:
-  - build
-  - test
+  - build_and_test
 
 # run using the Cori runner
 .ci-runner:
@@ -43,13 +42,13 @@ stages:
     - cori
 
 # build using OpenMP flag
-build-cori-gpu:
+build-test-cori-gpu:
   rules:
     - if: '$CI_COMMIT_BRANCH == "omp-45-cray"'
 
   extends: .ci-runner
 
-  stage: build
+  stage: build_and_test
 
   script:
     - echo "Running build"
@@ -71,22 +70,6 @@ build-cori-gpu:
     - cd ${RRTMGP_ROOT}/examples/all-sky
     - make clean
     - make
-
-  variables:
-    SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
-
-# run tests using the binary built in the build stage
-# can probably be generalized except for the scheduling
-# variables where are specific to Cori-GPU
-test-cori-gpu:
-  extends: .ci-runner
-
-  dependencies:
-    - build-cori-gpu
-
-  stage: test
-
-  script:
     - echo "Running clear sky test"
     - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
     - chmod u+x ./run-rfmip-examples.py
@@ -95,8 +78,8 @@ test-cori-gpu:
     - ./compare-to-reference.py --fail=1.e-4
     - echo "Running all sky test"
     - cd ${RRTMGP_ROOT}/examples/all-sky
-    - chmod u+x	./run-allsky-example.py
-    - chmod u+x	./compare-to-reference.py
+    - chmod u+x ./run-allsky-example.py
+    - chmod u+x ./compare-to-reference.py
     - srun ./run-allsky-example.py
     - ./compare-to-reference.py
 
