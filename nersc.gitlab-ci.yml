@@ -68,6 +68,9 @@ build-cori-gpu:
     - make clean
     - make
 
+  variables:
+    SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
+
 # run tests using the binary built in the build stage
 # can probably be generalized except for the scheduling
 # variables where are specific to Cori-GPU
@@ -88,5 +91,6 @@ test-cori-gpu:
     - chmod u+x	./compare-to-reference.py
     - srun ./run-allsky-example.py
     - ./compare-to-reference.py
+
   variables:
     SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
