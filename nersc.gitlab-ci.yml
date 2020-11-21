@@ -45,8 +45,11 @@ stages:
 build-cori-gpu:
   rules:
     - if: '$CI_COMMIT_BRANCH == "omp-45-cray"'
+
   extends: .ci-runner
+
   stage: build
+
   script:
     - echo "Running build"
     - echo "Building RTE and RRTMGP libraries"
@@ -81,6 +84,7 @@ test-cori-gpu:
     - build-cori-gpu
 
   stage: test
+
   script:
     - echo "Running clear sky test"
     - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
