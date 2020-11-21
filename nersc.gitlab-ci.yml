@@ -76,7 +76,10 @@ build-cori-gpu:
 # variables where are specific to Cori-GPU
 test-cori-gpu:
   extends: .ci-runner
-  needs: ["build-cori-gpu"]
+
+  dependencies:
+    - build-cori-gpu
+
   stage: test
   script:
     - echo "Running clear sky test"
