@@ -63,7 +63,7 @@ build-cori-gpu:
     - echo "Building clear sky example"
     - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
     - export NCHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
-    - export NFHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
+    - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
     - export RRTMGP_BUILD=${RRTMGP_ROOT}/build
     - make clean
     - make
