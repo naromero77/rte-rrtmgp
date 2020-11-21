@@ -23,7 +23,7 @@ before_script:
   - source activate e3sm
   - echo "Loading modules"
   - module load cgpu
-  - module swap PrgEnv-intel PrgEnv-cray
+  - module swap PrgEnv-{intel,cray}
   - module swap craype-{${CRAY_CPU_TARGET},x86-skylake}
   - module load cuda
   - export CRAY_ACCEL_TARGET=nvidia70
