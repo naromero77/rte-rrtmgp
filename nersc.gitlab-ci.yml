@@ -51,18 +51,21 @@ build-test-cori-gpu:
   stage: build_and_test
 
   script:
+    - echo "Set compiler specific variables"
+    - export RTE_KERNELS=openacc
+    - export FC=ftn
+    - export FCFLAGS="-hnoacc -homp -O3"
+    - export NCHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
+    - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
+    - export LD_LIBRARY_PATH=${NFHOME}/lib:${LD_LIBRARY_PATH}
     - echo "Running build"
     - echo "Building RTE and RRTMGP libraries"
     - cd ${RRTMGP_ROOT}/build
     - rm -f Makefile.conf
-    - export FC=ftn
-    - export FCFLAGS="-hnoacc -homp -O3"
     - make clean
     - make
     - echo "Building clear sky example"
     - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
-    - export NCHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
-    - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
     - export RRTMGP_BUILD=${RRTMGP_ROOT}/build
     - make clean
     - make
@@ -71,7 +74,6 @@ build-test-cori-gpu:
     - make clean
     - make
     - echo "Loading needed Spack module"
-    - spack load netcdf-fortran%cce@10.0.3
     - echo "Running clear sky test"
     - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
     - chmod u+x ./run-rfmip-examples.py
