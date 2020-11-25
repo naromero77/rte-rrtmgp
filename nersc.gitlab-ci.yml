@@ -54,7 +54,7 @@ build-test-cori-gpu:
     - echo "Set compiler specific variables"
     - export RTE_KERNELS=openacc
     - export FC=ftn
-    - export FCFLAGS="-hnoacc -homp -O2"
+    - export FCFLAGS="-hnoacc -homp -O0"
     - export NCHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
     - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
     - export LD_LIBRARY_PATH=${NFHOME}/lib:${LD_LIBRARY_PATH}
