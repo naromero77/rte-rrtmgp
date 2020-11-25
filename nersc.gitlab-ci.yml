@@ -70,6 +70,8 @@ build-test-cori-gpu:
     - cd ${RRTMGP_ROOT}/examples/all-sky
     - make clean
     - make
+    - echo "Loading needed Spack module"
+    - spack load netcdf-fortran%cce@10.0.3
     - echo "Running clear sky test"
     - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
     - chmod u+x ./run-rfmip-examples.py
