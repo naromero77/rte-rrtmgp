@@ -7,8 +7,8 @@
 #
 # RRTMGP library, module files
 #
-LDFLAGS   += -L$(RRTMGP_BUILD)
-LIBS      += -lrrtmgp -lrte
+# LDFLAGS   += -L$(RRTMGP_BUILD)
+# LIBS      += -lrrtmgp -lrte
 FCINCLUDE += -I$(RRTMGP_BUILD)
 
 #
