@@ -18,6 +18,7 @@ before_script:
   - echo "CI_PROJECT_DIR =" ${CI_PROJECT_DIR}
   - export RRTMGP_ROOT=$PWD
   - export RRTMGP_DIR=$PWD/build
+  - export RRTMGP_BUILD=${RRTMGP_ROOT}/build
   - echo "Loading conda environment"
   - module load python
   - source activate e3sm
@@ -28,6 +29,7 @@ before_script:
   - module swap cce cce/10.0.3
   - module load cuda
   - export CRAY_ACCEL_TARGET=nvidia70
+  - echo "Setting environmenta variables for NETCDF"
   - export NCHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
   - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
   - export LD_LIBRARY_PATH=${NFHOME}/lib:${NCHOME}/lib:${LD_LIBRARY_PATH}
@@ -54,7 +56,6 @@ common_build: &common_build
   - make
   - echo "Building clear sky example"
   - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
-  - export RRTMGP_BUILD=${RRTMGP_ROOT}/build
   - make clean
   - make
   - echo "Building all sky example"
