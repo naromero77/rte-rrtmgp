@@ -79,16 +79,12 @@ build-test-cori-gpu:
     - echo "Running clear sky test"
     - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
     - python ./stage_files.py
-    - chmod u+x ./run-rfmip-examples.py
-    - chmod u+x ./compare-to-reference.py
-    - srun ./run-rfmip-examples.py
-    - ./compare-to-reference.py --fail=7.e-4
+    - srun python ./run-rfmip-examples.py --block_size 1800
+    - python ./compare-to-reference.py --fail=7.e-4
     - echo "Running all sky test"
     - cd ${RRTMGP_ROOT}/examples/all-sky
-    - chmod u+x ./run-allsky-example.py
-    - chmod u+x ./compare-to-reference.py
-    - srun ./run-allsky-example.py
-    - ./compare-to-reference.py
+    - srun python ./run-allsky-example.py
+    - python ./compare-to-reference.py
 
   variables:
     SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
