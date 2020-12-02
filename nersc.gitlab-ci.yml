@@ -76,6 +76,7 @@ build-test-cori-gpu:
     - echo "Loading needed Spack module"
     - echo "Running clear sky test"
     - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
+    - python ./stage_files.py
     - chmod u+x ./run-rfmip-examples.py
     - chmod u+x ./compare-to-reference.py
     - srun ./run-rfmip-examples.py
