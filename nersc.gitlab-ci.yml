@@ -57,7 +57,7 @@ build-test-cori-gpu:
     - export FCFLAGS="-hnoacc -homp -O0"
     - export NCHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
     - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
-    - export LD_LIBRARY_PATH=${NFHOME}/lib:${LD_LIBRARY_PATH}
+    - export LD_LIBRARY_PATH=${NFHOME}/lib:${NCHOME}/lib:${LD_LIBRARY_PATH}
     - echo "Running build"
     - echo "Building RTE and RRTMGP libraries"
     - cd ${RRTMGP_ROOT}/build
