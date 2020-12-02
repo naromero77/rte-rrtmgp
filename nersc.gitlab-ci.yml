@@ -47,36 +47,6 @@ stages:
   tags:
     - cori
 
-# common build recipe
-common_build: &common_build
-  - echo "Running build"
-  - echo "Building RTE and RRTMGP libraries"
-  - cd ${RRTMGP_ROOT}/build
-  - rm -f Makefile.conf
-  - make clean
-  - make
-  - echo "Building clear sky example"
-  - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
-  - make clean
-  - make
-  - echo "Building all sky example"
-  - cd ${RRTMGP_ROOT}/examples/all-sky
-  - make clean
-  - make
-  - echo "Running clear sky test"
-  - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
-  - python ./stage_files.py
-  - chmod u+x ./run-rfmip-examples.py
-  - chmod u+x ./compare-to-reference.py
-  - srun ./run-rfmip-examples.py
-  - ./compare-to-reference.py --fail=7.e-4
-  - echo "Running all sky test"
-  - cd ${RRTMGP_ROOT}/examples/all-sky
-  - chmod u+x ./run-allsky-example.py
-  - chmod u+x ./compare-to-reference.py
-  - srun ./run-allsky-example.py
-  - ./compare-to-reference.py
-
 # build using Cray Compiler for sequential code
 build-test-cori-gpu:
   rules:
@@ -91,7 +61,34 @@ build-test-cori-gpu:
     - echo "Set compiler specific variables"
     - unset RTE_KERNELS
     - export FC=ftn
-    - export FCFLAGS="-hnoacc -hnoomp -O0" <<: *common_build
+    - export FCFLAGS="-hnoacc -hnoomp -O0"
+    - echo "Running build"
+    - echo "Building RTE and RRTMGP libraries"
+    - cd ${RRTMGP_ROOT}/build
+    - rm -f Makefile.conf
+    - make clean
+    - make
+    - echo "Building clear sky example"
+    - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
+    - make clean
+    - make
+    - echo "Building all sky example"
+    - cd ${RRTMGP_ROOT}/examples/all-sky
+    - make clean
+    - make
+    - echo "Running clear sky test"
+    - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
+    - python ./stage_files.py
+    - chmod u+x ./run-rfmip-examples.py
+    - chmod u+x ./compare-to-reference.py
+    - srun ./run-rfmip-examples.py
+    - ./compare-to-reference.py --fail=7.e-4
+    - echo "Running all sky test"
+    - cd ${RRTMGP_ROOT}/examples/all-sky
+    - chmod u+x ./run-allsky-example.py
+    - chmod u+x ./compare-to-reference.py
+    - srun ./run-allsky-example.py
+    - ./compare-to-reference.py
 
   variables:
     SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
@@ -110,7 +107,34 @@ build-test-cori-gpu-offload:
     - echo "Set compiler specific variables"
     - export RTE_KERNELS=openacc
     - export FC=ftn
-    - export FCFLAGS="-hnoacc -homp -O0" <<: *common_build
+    - export FCFLAGS="-hnoacc -homp -O0"
+    - echo "Running build"
+    - echo "Building RTE and RRTMGP libraries"
+    - cd ${RRTMGP_ROOT}/build
+    - rm -f Makefile.conf
+    - make clean
+    - make
+    - echo "Building clear sky example"
+    - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
+    - make clean
+    - make
+    - echo "Building all sky example"
+    - cd ${RRTMGP_ROOT}/examples/all-sky
+    - make clean
+    - make
+    - echo "Running clear sky test"
+    - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
+    - python ./stage_files.py
+    - chmod u+x ./run-rfmip-examples.py
+    - chmod u+x ./compare-to-reference.py
+    - srun ./run-rfmip-examples.py
+    - ./compare-to-reference.py --fail=7.e-4
+    - echo "Running all sky test"
+    - cd ${RRTMGP_ROOT}/examples/all-sky
+    - chmod u+x ./run-allsky-example.py
+    - chmod u+x ./compare-to-reference.py
+    - srun ./run-allsky-example.py
+    - ./compare-to-reference.py
 
   variables:
     SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
