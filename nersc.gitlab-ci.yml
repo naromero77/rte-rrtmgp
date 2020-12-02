@@ -39,7 +39,8 @@ after_script:
   - echo "To be completed"
 
 stages:
-  - build_and_test
+  - build_serial
+  - build_omp
 
 # run using the Cori runner
 .ci-runner:
@@ -76,52 +77,40 @@ common_build: &common_build
   - srun ./run-allsky-example.py
   - ./compare-to-reference.py
 
-# build using Cray OpenMP offload flag
+# build using Cray Compiler for sequential code
 build-test-cori-gpu:
   rules:
     - if: '$CI_COMMIT_BRANCH == "omp-45-cray"'
 
   extends: .ci-runner
 
-  stage: build_and_test
+  stage: build_serial
 
   script:
+    - echo "Cori GPU (serial)"
+    - echo "Set compiler specific variables"
+    - unset RTE_KERNELS
+    - export FC=ftn
+    - export FCFLAGS="-hnoacc -hnoomp -O0" <<: *common_build
+
+  variables:
+    SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
+
+# build using Cray Compiler for OpenMP offload flag
+build-test-cori-gpu-offload:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "omp-45-cray"'
+
+  extends: .ci-runner
+
+  stage: build_omp
+
+  script:
+    - echo "Cori GPU (OpenMP offload to GPU)"
     - echo "Set compiler specific variables"
     - export RTE_KERNELS=openacc
     - export FC=ftn
-    - export FCFLAGS="-hnoacc -homp -O0"
-    - export NCHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
-    - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
-    - export LD_LIBRARY_PATH=${NFHOME}/lib:${NCHOME}/lib:${LD_LIBRARY_PATH}
-    - echo "Running build"
-    - echo "Building RTE and RRTMGP libraries"
-    - cd ${RRTMGP_ROOT}/build
-    - rm -f Makefile.conf
-    - make clean
-    - make
-    - echo "Building clear sky example"
-    - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
-    - export RRTMGP_BUILD=${RRTMGP_ROOT}/build
-    - make clean
-    - make
-    - echo "Building all sky example"
-    - cd ${RRTMGP_ROOT}/examples/all-sky
-    - make clean
-    - make
-    - echo "Loading needed Spack module"
-    - echo "Running clear sky test"
-    - cd ${RRTMGP_ROOT}/examples/rfmip-clear-sky
-    - python ./stage_files.py
-    - chmod u+x ./run-rfmip-examples.py
-    - chmod u+x ./compare-to-reference.py
-    - srun ./run-rfmip-examples.py
-    - ./compare-to-reference.py --fail=7.e-4
-    - echo "Running all sky test"
-    - cd ${RRTMGP_ROOT}/examples/all-sky
-    - chmod u+x ./run-allsky-example.py
-    - chmod u+x ./compare-to-reference.py
-    - srun ./run-allsky-example.py
-    - ./compare-to-reference.py
+    - export FCFLAGS="-hnoacc -homp -O0" <<: *common_build
 
   variables:
     SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
