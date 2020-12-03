@@ -33,7 +33,7 @@ before_script:
   - echo "Setting environmenta variables for NETCDF"
   - export NCHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
   - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
-  - export LD_RUN_PATH=${NFHOME}/lib:${NCHOME}/lib
+  - export DT_RUNPATH=${NFHOME}/lib:${NCHOME}/lib
   - ulimit -c unlimited
   - unset CRAY_ACC_DEBUG
 
