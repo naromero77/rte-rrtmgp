@@ -92,7 +92,7 @@ build-test-cori-gpu:
     - python ./compare-to-reference.py
 
   variables:
-    SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
+    SCHEDULER_PARAMETERS: "-M escori -N 1 -C gpu -t 30 -c 20 -G 2 -A m3312"
 
 # build using Cray Compiler for OpenMP offload flag
 build-test-cori-gpu-offload:
