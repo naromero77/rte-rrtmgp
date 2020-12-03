@@ -34,6 +34,7 @@ before_script:
   - export NCHOME=`spack location -i netcdf-c~mpi%cce@10.0.3`
   - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
   - export LD_LIBRARY_PATH=${NFHOME}/lib:${NCHOME}/lib:${LD_LIBRARY_PATH}
+  - echo $LD_LIBRARY_PATH
   - ulimit -c unlimited
   - unset CRAY_ACC_DEBUG
 
