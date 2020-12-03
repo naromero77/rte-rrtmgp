@@ -57,6 +57,7 @@ build-test-cori-gpu:
   stage: build_serial
 
   script:
+    - srun nvidia-smi
     - echo "Cori GPU (serial)"
     - echo "Set compiler specific variables"
     - unset RTE_KERNELS
