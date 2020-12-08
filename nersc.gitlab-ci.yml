@@ -79,8 +79,7 @@ before_script:
   - unset CRAY_ACC_DEBUG
 
 after_script:
-  - echo "Transmit CI Results to GitHub"
-  - echo "To be completed"
+  - echo "CI results being transmitted back to github"
 
 stages:
   - build_serial
@@ -125,4 +124,4 @@ build-test-cori-gpu-offload:
     - *label1
 
   variables:
-    SCHEDULER_PARAMETERS: "-M escori -N 1 --gres=gpu:1 -C gpu -t 00:30:00"
+    SCHEDULER_PARAMETERS: "-M escori -N 1 -C gpu -t 15 -c 10 -G 1 -A m3312"
