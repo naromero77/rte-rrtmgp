@@ -93,6 +93,7 @@ build-test-cori-gpu:
     - python ./compare-to-reference.py --fail=7.e-4
     - echo "Running all sky test"
     - cd ${RRTMGP_ROOT}/examples/all-sky
+    - cp ${RRTMGP_ROOT}/rrtmgp/data/*.nc .
     - cp ${RRTMGP_ROOT}/extensions/cloud_optics/*.nc .
     - cp garand-atmos-1.nc rrtmgp-allsky.nc
     - srun -n 1 ./rrtmgp_allsky ./rrtmgp-allsky.nc ./rrtmgp-data-lw-g256-2018-12-04.nc ./rrtmgp-cloud-optics-coeffs-lw.nc 128
