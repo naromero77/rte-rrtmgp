@@ -12,6 +12,11 @@
 # Scratch directory name is:
 # /global/cscratch1/ecp-gitlab/$username
 
+# run using the Cori runner
+.ci-runner:
+  tags:
+    - cori
+
 # re-useable script
 .common_script1: &label1
   - echo "Running build"
@@ -80,11 +85,6 @@ after_script:
 stages:
   - build_serial
   - build_omp
-
-# run using the Cori runner
-.ci-runner:
-  tags:
-    - cori
 
 # build using Cray Compiler for sequential code
 build-test-cori-gpu:
