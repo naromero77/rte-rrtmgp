@@ -36,6 +36,7 @@ before_script:
   - export LD_LIBRARY_PATH=${NFHOME}/lib:${NCHOME}/lib:${LD_LIBRARY_PATH}
   - echo $LD_LIBRARY_PATH
   - ulimit -c unlimited
+  - ulimit -s unlimited
   - unset CRAY_ACC_DEBUG
 
 after_script:
