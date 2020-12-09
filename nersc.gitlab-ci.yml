@@ -12,13 +12,20 @@
 # Scratch directory name is:
 # /global/cscratch1/ecp-gitlab/$username
 
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "omp-45-cray"'
+
+variables:
+  SCHEDULER_PARAMETERS: "-M escori -N 1 -C gpu -t 15 -c 10 -G 1 -A m3312"
+
 # run using the Cori runner
 .ci-runner:
   tags:
     - cori
 
-# re-useable script
-.common_script1: &label1
+# re-useable build script
+.common_build: &common_build
   - echo "Running build"
   - echo "Building RTE and RRTMGP libraries"
   - cd ${RRTMGP_ROOT}/build
@@ -51,16 +58,22 @@
   - srun -n 1 ./rrtmgp_allsky ./rrtmgp-allsky.nc ./rrtmgp-data-sw-g224-2018-12-04.nc ./rrtmgp-cloud-optics-coeffs-sw.nc 128
   - python ./compare-to-reference.py
 
-# Common step for each pipeline.
+# Common configuration step
 before_script:
   - echo "Setting up RTE-RRTMGP environment variables"
   - echo "CI_PROJECT_DIR =" ${CI_PROJECT_DIR}
-  - export RRTMGP_ROOT=$PWD
-  - export RRTMGP_DIR=$PWD/build
-  - export RRTMGP_BUILD=${RRTMGP_ROOT}/build
   - echo "Loading conda environment"
   - module load python
   - source activate e3sm
+  - echo "Setting ulimits"
+  - ulimit -c unlimited
+  - ulimit -s unlimited
+  - export RRTMGP_ROOT=$PWD
+  - export RRTMGP_DIR=$PWD/build
+  - export RRTMGP_BUILD=${RRTMGP_ROOT}/build
+
+# CCE Compiler configuration
+.cce_config: &cce_config
   - echo "Loading modules"
   - module load cgpu
   - module swap PrgEnv-{intel,cray}
@@ -74,54 +87,39 @@ before_script:
   - export NFHOME=`spack location -i netcdf-fortran%cce@10.0.3`
   - export LD_LIBRARY_PATH=${NFHOME}/lib:${NCHOME}/lib:${LD_LIBRARY_PATH}
   - echo $LD_LIBRARY_PATH
-  - ulimit -c unlimited
-  - ulimit -s unlimited
   - unset CRAY_ACC_DEBUG
+  - echo "Set compiler specific variables"
+  - export FC=ftn
 
 after_script:
   - echo "CI results being transmitted back to github"
 
 stages:
-  - build_serial
-  - build_omp
+  - build_cce_serial
+  - build_cce_omp
 
 # build using Cray Compiler for sequential code
-build-test-cori-gpu:
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "omp-45-cray"'
-
+build-test-cori-gpu-cce:
   extends: .ci-runner
 
-  stage: build_serial
+  stage: build_cce_serial
 
   script:
-    - echo "Cori GPU (serial)"
-    - echo "Set compiler specific variables"
+    - *cce_config
+    - echo "Cori GPU (CCE - serial)"
     - unset RTE_KERNELS
-    - export FC=ftn
     - export FCFLAGS="-hnoacc -hnoomp -O0"
-    - *label1
-
-
-  variables:
-    SCHEDULER_PARAMETERS: "-M escori -N 1 -C gpu -t 30 -c 20 -G 2 -A m3312"
+    - *common_build
 
 # build using Cray Compiler for OpenMP offload flag
-build-test-cori-gpu-offload:
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "omp-45-cray"'
-
+build-test-cori-gpu-cce-offload:
   extends: .ci-runner
 
-  stage: build_omp
+  stage: build_cce_omp
 
   script:
-    - echo "Cori GPU (OpenMP offload to GPU)"
-    - echo "Set compiler specific variables"
+    - *cce_config
+    - echo "Cori GPU (CCE - OpenMP offload to GPU)"
     - export RTE_KERNELS=openacc
-    - export FC=ftn
     - export FCFLAGS="-hnoacc -homp -O0"
-    - *label1
-
-  variables:
-    SCHEDULER_PARAMETERS: "-M escori -N 1 -C gpu -t 15 -c 10 -G 1 -A m3312"
+    - *common_build
