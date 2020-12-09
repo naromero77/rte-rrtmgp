@@ -107,16 +107,13 @@ before_script:
   - export FC=pgfortran
 
 stages:
-  - build_cce_serial
-  - build_cce_omp
-  - build_pgi_serial
-  - build_pgi_acc
+  - build_test
 
 # build using Cray Compiler for sequential code
 build-test-cori-gpu-cce:
   extends: .ci-runner
 
-  stage: build_cce_serial
+  stage: build_test
 
   script:
     - *cce_config
@@ -129,7 +126,7 @@ build-test-cori-gpu-cce:
 build-test-cori-gpu-cce-omp:
   extends: .ci-runner
 
-  stage: build_cce_omp
+  stage: build_test
 
   script:
     - *cce_config
@@ -142,7 +139,7 @@ build-test-cori-gpu-cce-omp:
 build-test-cori-gpu-pgi:
   extends: .ci-runner
 
-  stage: build_pgi_serial
+  stage: build_test
 
   script:
     - *pgi_config
@@ -155,7 +152,7 @@ build-test-cori-gpu-pgi:
 build-test-cori-gpu-pgi-acc:
   extends: .ci-runner
 
-  stage: build_pgi_acc
+  stage: build_test
 
   script:
     - *pgi_config
