@@ -91,12 +91,12 @@ before_script:
   - echo "Set compiler specific variables"
   - export FC=ftn
 
-after_script:
-  - echo "CI results being transmitted back to github"
 
 stages:
   - build_cce_serial
   - build_cce_omp
+  - build_pgi_serial
+  - build_pgi_acc
 
 # build using Cray Compiler for sequential code
 build-test-cori-gpu-cce:
