@@ -85,7 +85,7 @@ contains
     dim2 = size(array,2)
     dim3 = size(array,3)
     minValue = array(1,1,1) ! initialize to some value
-    !$omp target teams distribute parallel do simd collapse(3) map(to:array, dim1, dim2, dim3) map(tofrom:minValue) reduction(min:minValue)
+    !$omp target teams distribute parallel do simd collapse(3) map(to:array, dim1, dim2, dim3) reduction(min:minValue)
     do i = 1, dim1
        do j = 1, dim2
           do k = 1, dim3
@@ -206,7 +206,7 @@ contains
     dim3 = size(array,3)
     minValue = array(1,1,1) ! initialize to some value
     maxValue = array(1,1,1) ! initialize to some value
-    !$omp target teams distribute parallel do simd collapse(3) map(to:array, dim1, dim2, dim3) map(tofrom:minValue, maxValue) reduction(min:minValue) reduction(max:maxValue)
+    !$omp target teams distribute parallel do simd collapse(3) map(to:array, dim1, dim2, dim3) reduction(min:minValue) reduction(max:maxValue)
     do i= 1, dim1
        do j = 1, dim2
           do k = 1, dim3
