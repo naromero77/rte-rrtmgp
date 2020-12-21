@@ -14,7 +14,7 @@
 
 workflow:
   rules:
-    - if: '$CI_COMMIT_BRANCH == "omp-45-cray"'
+    - if: '$CI_COMMIT_SOURCE == "push"'
 
 variables:
   SCHEDULER_PARAMETERS: "-M escori -N 1 -C gpu -t 15 -c 10 -G 1 -A m3312"
